@@ -1,0 +1,137 @@
+package com.example.appprenotazioneboot.service;
+
+import com.example.appprenotazioneboot.dto.UtenteDTO;
+import com.example.appprenotazioneboot.dto.UtenteFiltro;
+import com.example.appprenotazioneboot.dto.UtenteRequest;
+import com.example.appprenotazioneboot.entities.Sede;
+import com.example.appprenotazioneboot.entities.Utente;
+import com.example.appprenotazioneboot.repository.SedeRepository;
+import com.example.appprenotazioneboot.repository.UtenteRepository;
+import jakarta.persistence.criteria.Join;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+public class UtenteServiceImpl implements  UtenteService{
+    private final ModelMapper modelMapper;
+    private final SedeRepository sedeRepository;
+    private UtenteRepository repository;
+
+    public UtenteServiceImpl(UtenteRepository repository, ModelMapper modelMapper, SedeRepository sedeRepository) {
+        this.repository = repository;
+        this.modelMapper = modelMapper;
+        this.sedeRepository = sedeRepository;
+    }
+
+    public Utente loginUtente(String email, String password) {
+        Utente utente = repository.findByEmail(email);
+
+        if (utente != null) {
+            String encryptedPassword = null;
+            try {
+                encryptedPassword = passwordEncrypting(password);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+
+
+            if (encryptedPassword.equals(utente.getPassword())) {
+                return utente;
+            }
+        }
+        return null;
+    }
+
+    public void inserisciUtente(UtenteRequest utenteRequest) {
+        try {
+            utenteRequest.setPassword(passwordEncrypting(utenteRequest.getPassword()));
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        Utente utente = modelMapper.map(utenteRequest, Utente.class);
+
+        if (utenteRequest.getIdSede() != null) {
+            Sede sede = sedeRepository.findSedeById(utenteRequest.getIdSede());
+            if(sede != null) {
+                utente.setSede(sede);
+            } else {
+                utente.setSede(new Sede());
+            }
+        } else {
+            utente.setSede(new Sede());
+        }
+        repository.save(utente);
+    }
+
+
+    public String passwordEncrypting(String password) throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] encodedhash = digest.digest(
+                password.getBytes(StandardCharsets.UTF_8));
+
+        return HexFormat.of().formatHex(encodedhash);
+    }
+
+    public List<UtenteDTO> getAllUtenti(){
+        List<Utente> utenti = repository.findAll();
+        List<UtenteDTO> utentiDTO = new ArrayList<>();
+        for(int i=0; i<utenti.size(); i++){
+            utentiDTO.add(modelMapper.map(utenti.get(i), UtenteDTO.class));
+        }
+
+        return utentiDTO;
+    }
+
+    public static Specification<Utente> hasEmail(String email){
+        return ((root, query, criteriaBuilder) -> {
+            return criteriaBuilder.equal(root.get("email"), email);
+        });
+    }
+
+    public static Specification<Utente> hasCitta(String citta){
+        return ((root, query, criteriaBuilder) -> {
+            Join<Utente, Sede> utenteSede = root.join("sede");
+            return criteriaBuilder.equal(utenteSede.get("citta"), citta);
+        });
+    }
+
+    public static Specification<Utente> hasIndirizzo(String indirizzo){
+        return ((root, query, criteriaBuilder) -> {
+            Join<Utente, Sede> utenteSede = root.join("sede");
+            return criteriaBuilder.equal(utenteSede.get("indirizzo"), indirizzo);
+        });
+    }
+
+    public Page<UtenteDTO> getUtentiByFilter(UtenteFiltro utenteFiltro, Pageable pageable){
+
+        Specification<Utente> specification = Specification.where(null);
+
+        if(utenteFiltro.getEmail() != null){
+            specification = specification.and(hasEmail(utenteFiltro.getEmail()));
+        }
+
+        if(utenteFiltro.getCitta() != null){
+            specification = specification.and(hasCitta(utenteFiltro.getCitta()));
+        }
+
+        if(utenteFiltro.getIndirizzo() != null){
+            specification = specification.and(hasIndirizzo(utenteFiltro.getIndirizzo()));
+        }
+
+
+        return repository.findAll(specification, pageable)
+                .map(utente -> modelMapper.map(utente, UtenteDTO.class));
+
+    }
+}

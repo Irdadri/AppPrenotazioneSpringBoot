@@ -1,0 +1,27 @@
+package com.example.appprenotazioneboot.service;
+
+import com.example.appprenotazioneboot.dto.PrenotazioneDTO;
+import com.example.appprenotazioneboot.dto.PrenotazioneRequest;
+import com.example.appprenotazioneboot.dto.PrenotazioniFiltro;
+import com.example.appprenotazioneboot.entities.Prenotazione;
+import com.example.appprenotazioneboot.entities.Utente;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatusCode;
+
+
+import java.util.List;
+
+public interface PrenotazioneService {
+    //da rivedere
+    List<PrenotazioneDTO> getPrenotazioni(String idUtente);
+//    List<PrenotazioneDTO> getAllPrenotazioni();
+//    List<PrenotazioneDTO> getPrenotazioniUtente(Utente utente);
+
+
+    Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(Utente utente, Pageable pageable);
+    Page<PrenotazioneDTO> getAllPrenotazioniByFilter(PrenotazioniFiltro prenotazioniFiltro, Pageable pageable);
+    PrenotazioneDTO insertPrenotazione(PrenotazioneRequest request, Utente utente);
+
+
+}
