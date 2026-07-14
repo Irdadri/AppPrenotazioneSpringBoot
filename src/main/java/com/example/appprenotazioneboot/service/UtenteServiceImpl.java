@@ -3,7 +3,9 @@ package com.example.appprenotazioneboot.service;
 import com.example.appprenotazioneboot.dto.UtenteDTO;
 import com.example.appprenotazioneboot.dto.UtenteFiltro;
 import com.example.appprenotazioneboot.dto.UtenteRequest;
+import com.example.appprenotazioneboot.entities.Prenotazione;
 import com.example.appprenotazioneboot.entities.Sede;
+import com.example.appprenotazioneboot.entities.TipoUtenteEnum;
 import com.example.appprenotazioneboot.entities.Utente;
 import com.example.appprenotazioneboot.repository.SedeRepository;
 import com.example.appprenotazioneboot.repository.UtenteRepository;
@@ -83,14 +85,9 @@ public class UtenteServiceImpl implements  UtenteService{
         return HexFormat.of().formatHex(encodedhash);
     }
 
-    public List<UtenteDTO> getAllUtenti(){
-        List<Utente> utenti = repository.findAll();
-        List<UtenteDTO> utentiDTO = new ArrayList<>();
-        for(int i=0; i<utenti.size(); i++){
-            utentiDTO.add(modelMapper.map(utenti.get(i), UtenteDTO.class));
-        }
-
-        return utentiDTO;
+    public Page<UtenteDTO> getAllUtenti(Pageable pageable){
+        Page<Utente> utenti = repository.findAll(pageable);
+        return utenti.map(utente -> modelMapper.map(utente, UtenteDTO.class));
     }
 
     public static Specification<Utente> hasEmail(String email){
@@ -134,4 +131,50 @@ public class UtenteServiceImpl implements  UtenteService{
                 .map(utente -> modelMapper.map(utente, UtenteDTO.class));
 
     }
+
+    @Override
+    public UtenteDTO getUtente(int id) {
+        return modelMapper.map(repository.findUtenteById(id), UtenteDTO.class);
+    }
+
+    @Override
+    public UtenteDTO aggiornaUtente(UtenteRequest utenteRequest, int id) {
+        Utente utente = repository.findUtenteById(id);
+        if(utente != null){
+            if(utenteRequest.getNome() != null){
+                utente.setNome(utenteRequest.getNome());
+            }
+            if(utenteRequest.getCognome() != null){
+                utente.setCognome(utenteRequest.getCognome());
+            }
+            if(utenteRequest.getPassword() != null){
+                utente.setPassword(utente.getPassword());
+            }
+            if(utenteRequest.getEmail() != null){
+                utente.setEmail(utente.getEmail());
+            }
+            if(utenteRequest.getTelefono() != null){
+                utente.setTelefono(utente.getTelefono());
+            }
+            if(utenteRequest.getTipoUtente() != null){
+                utente.setTipoUtente(TipoUtenteEnum.valueOf(utenteRequest.getTipoUtente()));
+            }
+            if(utenteRequest.getIdSede() != null){
+                utente.setSede(sedeRepository.findSedeById(utenteRequest.getIdSede()));
+            }
+
+            repository.save(utente);
+            return modelMapper.map(utente, UtenteDTO.class);
+        }
+        return null;
+    }
+
+    @Override
+    public void deleteById(int id) {
+        Utente utente = repository.findUtenteById(id);
+        if(utente != null){
+            repository.delete(utente);
+        }
+    }
+
 }

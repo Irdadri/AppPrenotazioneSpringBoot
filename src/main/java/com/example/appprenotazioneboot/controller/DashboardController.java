@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 @RestController
 @Log
 @RequestMapping("/dashboard")
+@CrossOrigin(origins = "http://localhost:4200")
 public class DashboardController {
 
     private final PrenotazioneService prenotazioneService;
@@ -47,11 +48,12 @@ public class DashboardController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<?> getDashboard( @RequestParam(defaultValue = "0") int page,
-                                           @RequestParam(defaultValue = "5") int size){
-        Pageable pageable = PageRequest.of(page,size);
-        Utente utente = (Utente) session.getAttribute("utente");
-        return ResponseEntity.ok(prenotazioneService.getAllPrenotazioniWithPaging(utente, pageable));
+    public ResponseEntity<?> getDashboard(@RequestParam(defaultValue = "0") int page,
+                                          @RequestParam(defaultValue = "5") int size,
+                                          @RequestParam int idUser) {
+        Pageable pageable = PageRequest.of(page, size);
+        //Utente utente = (Utente) session.getAttribute("utente");
+        return ResponseEntity.ok(prenotazioneService.getAllPrenotazioniWithPaging(idUser, pageable));
     }
 
 /*
@@ -67,15 +69,14 @@ public class DashboardController {
 
     //dati statici per i form
     @GetMapping("/listaSedi")
-    public ResponseEntity<List<Sede>> getListaSedi(){
+    public ResponseEntity<List<Sede>> getListaSedi() {
         return ResponseEntity.ok(sedeService.getAllSedi());
     }
 
     @GetMapping("/listaRuoli")
-    public ResponseEntity<TipoUtenteEnum[]> getRuoliUtente(){
+    public ResponseEntity<TipoUtenteEnum[]> getRuoliUtente() {
         return ResponseEntity.ok(TipoUtenteEnum.values());
     }
-
 
 
     //crea utente
@@ -89,21 +90,54 @@ public class DashboardController {
         }
 
         utenteService.inserisciUtente(utenteRequest);
-        return ResponseEntity.ok("inserimento riuscito");
+        return ResponseEntity.ok().build();
     }
+
     //restituisce la lista completa degli utenti
     @GetMapping("/utenti")
-    public ResponseEntity<?> getUtenti() {
-        return ResponseEntity.ok(utenteService.getAllUtenti());
+    public ResponseEntity<?> getUtenti(@RequestParam(defaultValue = "0") int page,
+                                       @RequestParam(defaultValue = "5") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(utenteService.getAllUtenti(pageable));
     }
 
+    @GetMapping("/prenotazione")
+    public ResponseEntity<?> currentPrenotazione(@RequestParam int idPrenotazione){
+        return ResponseEntity.ok(prenotazioneService.getPrenotazioneById(idPrenotazione));
+    };
 
+    @PutMapping("/aggiornaPrenotazione")
+    public ResponseEntity<?> updatePrenotazione(@Valid @RequestBody PrenotazioneRequest prenotazioneRequest,
+                                                BindingResult bindingResult,@RequestParam int idPrenotazione){
+        PrenotazioneDTO prenotazioneDTO = prenotazioneService.aggiornaPrenotazione(prenotazioneRequest, idPrenotazione);
+        if(prenotazioneDTO != null){
+            return ResponseEntity.ok(prenotazioneDTO);
+        } else{
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
+    @GetMapping("/utente")
+    public ResponseEntity<?> currentUtente(@RequestParam int idUtente){
+        return ResponseEntity.ok(utenteService.getUtente(idUtente));
+    }
+
+    @PutMapping("/aggiornaUtente")
+    public ResponseEntity<?> updateUtente(@Valid @RequestBody UtenteRequest utenteRequest,
+    BindingResult bindingResult, @RequestParam int idUser){
+        UtenteDTO utenteDTO = utenteService.aggiornaUtente(utenteRequest, idUser);
+        if(utenteDTO != null){
+            return ResponseEntity.ok(utenteDTO);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     //prenota una nuova postazione
     @PostMapping("/prenotazione")
     public ResponseEntity<?> creaPrenotazione(@Valid @RequestBody PrenotazioneRequest prenotazioneRequest,
-                                              BindingResult bindingResult) {
+                                              BindingResult bindingResult,
+                                              @RequestParam int idUser) {
         if (bindingResult.hasErrors()) {
             bindingResult.getFieldErrors().forEach(e -> {
                 log.info("Campo: " + e.getField());
@@ -117,15 +151,17 @@ public class DashboardController {
                     .stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining(",")));
         }
 
-        Utente utente = (Utente) session.getAttribute("utente");
-        if (utente != null) {
-            PrenotazioneDTO prenotazioneDTO = prenotazioneService.insertPrenotazione(prenotazioneRequest, utente);
+        //Utente utente = (Utente) session.getAttribute("utente");
+
+        PrenotazioneDTO prenotazioneDTO = prenotazioneService.insertPrenotazione(prenotazioneRequest, idUser);
+        if(prenotazioneDTO != null){
             return ResponseEntity.ok(prenotazioneDTO);
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("errore utente in sessione");
         }
-    }
 
+
+    }
 
 
     //endpoint per la ricerca con filtro
@@ -133,28 +169,54 @@ public class DashboardController {
     public ResponseEntity<?> searchUtente(@Valid @RequestBody UtenteFiltro utenteFiltro,
                                           BindingResult bindingResult,
                                           @RequestParam(defaultValue = "0") int page,
-                                          @RequestParam(defaultValue = "5") int size) throws FormErrorException{
+                                          @RequestParam(defaultValue = "5") int size) throws FormErrorException {
         Pageable pageable = PageRequest.of(page, size);
-        if(bindingResult.hasErrors()){
+        if (bindingResult.hasErrors()) {
             throw new FormErrorException();
         }
 
         return ResponseEntity.ok(utenteService.getUtentiByFilter(utenteFiltro, pageable));
     }
 
-    @PostMapping("/searchPrenotazioni")
-    public ResponseEntity<?> searchPrenotazione(@Valid @RequestBody PrenotazioniFiltro prenotazioniFiltro,
-                                          BindingResult bindingResult,
-                                          @RequestParam(defaultValue = "0") int page,
-                                          @RequestParam(defaultValue = "5") int size) throws FormErrorException{
+    @PostMapping("/searchPrenotazioniUtente")
+    public ResponseEntity<?> searchUtentePrenotazioni(@Valid @RequestBody PrenotazioniFiltro prenotazioniFiltro,
+                                                BindingResult bindingResult,
+                                                @RequestParam int idUser,
+                                                @RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(defaultValue = "5") int size) throws FormErrorException {
         Pageable pageable = PageRequest.of(page, size);
-        if(bindingResult.hasErrors()){
+        if (bindingResult.hasErrors()) {
+            throw new FormErrorException();
+        }
+
+        return ResponseEntity.ok(prenotazioneService.getUtentePrenotazioniByFilter(idUser,prenotazioniFiltro, pageable));
+    }
+
+    @PostMapping("/searchPrenotazioni")
+    public ResponseEntity<?> searchPrenotazioni(@Valid @RequestBody PrenotazioniFiltro prenotazioniFiltro,
+                                                      BindingResult bindingResult,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "5") int size) throws FormErrorException {
+        Pageable pageable = PageRequest.of(page, size);
+        if (bindingResult.hasErrors()) {
             throw new FormErrorException();
         }
 
         return ResponseEntity.ok(prenotazioneService.getAllPrenotazioniByFilter(prenotazioniFiltro, pageable));
     }
 
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deletePrenotazione(@PathVariable int id){
+        prenotazioneService.deletePrenotazioneById(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("deleteUtente/{id}")
+    public ResponseEntity<?> deleteUtente(@PathVariable int id){
+        utenteService.deleteById(id);
+        return ResponseEntity.ok().build();
+    }
 
 
 }

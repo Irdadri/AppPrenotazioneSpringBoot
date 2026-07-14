@@ -8,6 +8,7 @@ import com.example.appprenotazioneboot.entities.Utente;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
 import java.util.List;
@@ -19,9 +20,13 @@ public interface PrenotazioneService {
 //    List<PrenotazioneDTO> getPrenotazioniUtente(Utente utente);
 
 
-    Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(Utente utente, Pageable pageable);
+    Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(int idUtente, Pageable pageable);
     Page<PrenotazioneDTO> getAllPrenotazioniByFilter(PrenotazioniFiltro prenotazioniFiltro, Pageable pageable);
-    PrenotazioneDTO insertPrenotazione(PrenotazioneRequest request, Utente utente);
+    Page<PrenotazioneDTO> getUtentePrenotazioniByFilter(int idUser, PrenotazioniFiltro prenotazioniFiltro, Pageable pageable);
+    PrenotazioneDTO insertPrenotazione(PrenotazioneRequest request, int idUser);
+    PrenotazioneDTO getPrenotazioneById(int id);
+    PrenotazioneDTO aggiornaPrenotazione(PrenotazioneRequest prenotazioneRequest, int id);
+    void deletePrenotazioneById(int id);
 
 
 }

@@ -37,7 +37,7 @@ public class UtenteRequest {
 
     @NotBlank
     private String tipoUtente;
-
+    
     @NotNull
     private Integer idSede;
 }

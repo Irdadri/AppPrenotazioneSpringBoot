@@ -1,5 +1,6 @@
 package com.example.appprenotazioneboot.repository;
 
+import com.example.appprenotazioneboot.dto.PrenotazioneDTO;
 import com.example.appprenotazioneboot.entities.Prenotazione;
 import com.example.appprenotazioneboot.entities.Utente;
 import org.springframework.data.domain.Page;
@@ -15,4 +16,5 @@ public interface PrenotazioneRepository extends JpaRepository<Prenotazione, Inte
     public List<Prenotazione> findPrenotazioneByUtente(Utente utente);
 
     Page<Prenotazione> findPrenotazioneByUtente(Utente utente, Pageable pageable);
+    Prenotazione findPrenotazioneById(int id);
 }
