@@ -10,11 +10,18 @@ import com.example.appprenotazioneboot.entities.Utente;
 import com.example.appprenotazioneboot.repository.SedeRepository;
 import com.example.appprenotazioneboot.repository.UtenteRepository;
 import jakarta.persistence.criteria.Join;
+import lombok.extern.java.Log;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -25,15 +32,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class UtenteServiceImpl implements  UtenteService{
+@Log
+public class UtenteServiceImpl implements  UtenteService {
     private final ModelMapper modelMapper;
     private final SedeRepository sedeRepository;
     private UtenteRepository repository;
+    private final PasswordEncoder encoder;
 
-    public UtenteServiceImpl(UtenteRepository repository, ModelMapper modelMapper, SedeRepository sedeRepository) {
+    public UtenteServiceImpl(UtenteRepository repository, ModelMapper modelMapper, SedeRepository sedeRepository, PasswordEncoder encoder) {
         this.repository = repository;
         this.modelMapper = modelMapper;
         this.sedeRepository = sedeRepository;
+        this.encoder = encoder;
     }
 
     public Utente loginUtente(String email, String password) {
@@ -55,25 +65,33 @@ public class UtenteServiceImpl implements  UtenteService{
         return null;
     }
 
-    public void inserisciUtente(UtenteRequest utenteRequest) {
+    public void inserisciUtente(UtenteRequest utenteRequest) throws Exception {
+        /*
         try {
             utenteRequest.setPassword(passwordEncrypting(utenteRequest.getPassword()));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
-        }
+        }*/
         Utente utente = modelMapper.map(utenteRequest, Utente.class);
-
-        if (utenteRequest.getIdSede() != null) {
-            Sede sede = sedeRepository.findSedeById(utenteRequest.getIdSede());
-            if(sede != null) {
-                utente.setSede(sede);
+        Utente checkUtente = repository.findUtenteById(utente.getId());
+        if(utente != null) {
+            if (utenteRequest.getIdSede() != null) {
+                Sede sede = sedeRepository.findSedeById(utenteRequest.getIdSede());
+                if (sede != null) {
+                    utente.setSede(sede);
+                } else {
+                    utente.setSede(new Sede());
+                }
             } else {
                 utente.setSede(new Sede());
             }
+            repository.save(utente);
+
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.postForObject("http://localhost:9090/auth/creaUtente/" + utente.getId(), utenteRequest, UtenteRequest.class);
         } else {
-            utente.setSede(new Sede());
+            throw new Exception("user already exists");
         }
-        repository.save(utente);
     }
 
 
@@ -164,6 +182,8 @@ public class UtenteServiceImpl implements  UtenteService{
             }
 
             repository.save(utente);
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.postForObject("http://localhost:9090/auth/creaUtente/" + utente.getId(), utenteRequest, UtenteRequest.class);
             return modelMapper.map(utente, UtenteDTO.class);
         }
         return null;
@@ -174,7 +194,15 @@ public class UtenteServiceImpl implements  UtenteService{
         Utente utente = repository.findUtenteById(id);
         if(utente != null){
             repository.delete(utente);
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.delete("http://localhost:9090/auth/delete/" + utente.getId());
         }
     }
+
+    @Override
+    public Utente getUtenteByEmail(String email) {
+        return repository.findByEmail(email);
+    }
+
 
 }

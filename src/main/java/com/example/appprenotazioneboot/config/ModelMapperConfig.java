@@ -2,6 +2,7 @@ package com.example.appprenotazioneboot.config;
 
 import com.example.appprenotazioneboot.dto.PrenotazioneDTO;
 import com.example.appprenotazioneboot.dto.UtenteDTO;
+import com.example.appprenotazioneboot.dto.UtenteHttp;
 import com.example.appprenotazioneboot.dto.UtenteRequest;
 import com.example.appprenotazioneboot.entities.Prenotazione;
 import com.example.appprenotazioneboot.entities.TipoUtenteEnum;
@@ -52,6 +53,15 @@ public class ModelMapperConfig {
             map().getSede().setId(source.getIdSede());
         }
     };
+    /*
+    PropertyMap<UtenteHttp, Utente> utenteHttpUtentePropertyMap = new PropertyMap<UtenteHttp, Utente>() {
+        @Override
+        protected void configure() {
+            map().getSede().setId(source.getIdSede());
+        }
+    }
+
+     */
 
     PropertyMap<Utente, UtenteDTO> utenteDTOPropertyMap = new PropertyMap<Utente, UtenteDTO>() {
         @Override

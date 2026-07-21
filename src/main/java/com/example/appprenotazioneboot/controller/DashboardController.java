@@ -89,8 +89,13 @@ public class DashboardController {
             throw new FormErrorException();
         }
 
-        utenteService.inserisciUtente(utenteRequest);
-        return ResponseEntity.ok().build();
+        try {
+            utenteService.inserisciUtente(utenteRequest);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+
     }
 
     //restituisce la lista completa degli utenti
@@ -212,11 +217,13 @@ public class DashboardController {
         return ResponseEntity.ok().build();
     }
 
+
     @DeleteMapping("deleteUtente/{id}")
     public ResponseEntity<?> deleteUtente(@PathVariable int id){
         utenteService.deleteById(id);
         return ResponseEntity.ok().build();
     }
+
 
 
 }

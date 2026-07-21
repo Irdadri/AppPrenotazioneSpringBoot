@@ -13,21 +13,29 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Log
-@CrossOrigin(origins = "http://localhost:4200")
+@RequestMapping("/auth")
 public class LoginController {
 
     private UtenteService utenteService;
     private final HttpSession session;
 
+
+
     public LoginController(UtenteService utenteService, HttpSession session) {
         this.utenteService = utenteService;
         this.session = session;
+
+    }
+
+    @GetMapping("/welcome")
+    public String welcome() {
+        return "Welcome this endpoint is not secure";
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> userLogin(@Valid @RequestBody LoginRequest loginRequest,
-                                        BindingResult result){
-        if(result.hasErrors()){
+                                       BindingResult result) {
+        if (result.hasErrors()) {
             //return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             log.info("errore");
             return ResponseEntity.badRequest().build();
@@ -35,7 +43,7 @@ public class LoginController {
 
         Utente utente = utenteService.loginUtente(loginRequest.getEmail(), loginRequest.getPassword());
 
-        if(utente != null){
+        if (utente != null) {
             //return ResponseEntity.ok("Hello World!");
             session.setAttribute("utente", utente);
             return new ResponseEntity<Utente>(utente, HttpStatus.OK);
@@ -43,4 +51,18 @@ public class LoginController {
             return new ResponseEntity<>("email o password errati", HttpStatus.BAD_REQUEST);
         }
     }
+/*
+    @PostMapping("/generateToken")
+    public String authenticateAndGetToken(@RequestBody LoginRequest authRequest){
+        log.info(authRequest.getEmail() + " " + authRequest.getPassword());
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
+        if (authentication.isAuthenticated()) {
+            return jwtService.generateToken(authRequest.getEmail());
+        } else {
+            throw new UsernameNotFoundException("Invalid user request!");
+        }
+
+    }
+
+ */
 }
