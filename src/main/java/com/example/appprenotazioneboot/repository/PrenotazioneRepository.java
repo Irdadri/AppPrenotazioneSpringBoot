@@ -1,6 +1,6 @@
 package com.example.appprenotazioneboot.repository;
 
-import com.example.appprenotazioneboot.dto.PrenotazioneDTO;
+
 import com.example.appprenotazioneboot.entities.Prenotazione;
 import com.example.appprenotazioneboot.entities.Utente;
 import org.springframework.data.domain.Page;

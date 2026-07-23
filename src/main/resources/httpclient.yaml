@@ -1,0 +1,61 @@
+openapi: 3.0.3
+info:
+  title: Title
+  description: Title
+  version: 1.0.0
+servers:
+  - url: http://localhost:9090/auth/cerca/
+tags:
+  - name: utente
+    description: Operations about user management and authentication
+paths:
+  /{email}:
+    get:
+      tags:
+        - utente
+      operationId: getHttpUser
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtenteHttp'
+      security:
+        - basicAuth: [ ]
+
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    UtenteHttp:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        nome:
+          type: string
+        cognome:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        telefono:
+          type: string
+        tipoUtente:
+          type: string
+
+
+
+

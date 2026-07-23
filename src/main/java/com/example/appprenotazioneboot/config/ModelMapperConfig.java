@@ -1,9 +1,7 @@
+
 package com.example.appprenotazioneboot.config;
 
-import com.example.appprenotazioneboot.dto.PrenotazioneDTO;
-import com.example.appprenotazioneboot.dto.UtenteDTO;
-import com.example.appprenotazioneboot.dto.UtenteHttp;
-import com.example.appprenotazioneboot.dto.UtenteRequest;
+
 import com.example.appprenotazioneboot.entities.Prenotazione;
 import com.example.appprenotazioneboot.entities.TipoUtenteEnum;
 import com.example.appprenotazioneboot.entities.Utente;
@@ -12,10 +10,18 @@ import org.modelmapper.Converter;
 import org.modelmapper.PropertyMap;
 import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.spi.MappingContext;
+import org.openapitools.model.PrenotazioneDTO;
+import org.openapitools.model.UtenteDTO;
+import org.openapitools.model.UtenteRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.CrossOrigin;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Configuration
 public class ModelMapperConfig {
@@ -53,15 +59,6 @@ public class ModelMapperConfig {
             map().getSede().setId(source.getIdSede());
         }
     };
-    /*
-    PropertyMap<UtenteHttp, Utente> utenteHttpUtentePropertyMap = new PropertyMap<UtenteHttp, Utente>() {
-        @Override
-        protected void configure() {
-            map().getSede().setId(source.getIdSede());
-        }
-    }
-
-     */
 
     PropertyMap<Utente, UtenteDTO> utenteDTOPropertyMap = new PropertyMap<Utente, UtenteDTO>() {
         @Override
@@ -72,6 +69,15 @@ public class ModelMapperConfig {
             map().setIndirizzo(source.getSede().getIndirizzo());
         }
     };
+    /*
+    PropertyMap<Page, org.openapitools.model.Page> openapiPageMapping = new PropertyMap<Page, org.openapitools.model.Page>() {
+        @Override
+        protected void configure() {
+            map()
+        }
+    }
+    */
+
 
     Converter<String, TipoUtenteEnum> enumConverter = new AbstractConverter<String, TipoUtenteEnum>() {
 
@@ -80,4 +86,6 @@ public class ModelMapperConfig {
             return source == null ? null :TipoUtenteEnum.valueOf(source);
         }
     };
+
+
 }

@@ -1,0 +1,545 @@
+openapi: 3.0.3
+info:
+  title: Swagger appPrenotazione - OpenAPI 3.2
+  description: app prenotazione test
+
+  termsOfService: https://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.13
+servers:
+  - url: http://localhost:8080/dashboard
+
+
+tags:
+  - name: utente
+    description: Operations about user management and authentication
+  - name: prenotazione
+    description: Operations about booking
+
+
+paths:
+  #  /listaSedi:
+  #    get:
+  #      tags:
+  #        - prenotazione
+  #      summary: restituisce la lista delle sedi
+  #      description: lista sedi per form prenotazione
+  #      operationId: getListaSedi
+  #      responses:
+  #        '200':
+  #          description: succesful
+  #          content:
+  #            application/json:
+  #              schema:
+  #                type: array
+  #                items:
+  #                  $ref: '#/components/schemas/Sede'
+#  /listaRuoli:
+#    get:
+#      tags:
+#        - utente
+#      summary: restituisce la lista dei ruoli utente
+#      description: lista ruoli per form utente
+#      operationId: getRuoliUtente
+#      responses:
+#        '200':
+#          description: succesful
+#          content:
+#            application/json:
+#              schema:
+#                type: string
+  /prenotazione:
+    get:
+      tags:
+        - prenotazione
+      summary: restituisce la prenotazione corrente
+      description: prenotazione corrente
+      operationId: currentPrenotazione
+
+      parameters:
+        - name: idPrenotazione
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+
+      responses:
+        '200':
+          description: succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrenotazioneDTO'
+    post:
+      tags:
+        - prenotazione
+      summary: inserisci prenotazione
+      description: inserimento prenotazione
+      operationId: creaPrenotazione
+
+      requestBody:
+        description: dati da inserire
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrenotazioneRequest'
+        required: true
+      parameters:
+        - name: idUser
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrenotazioneDTO'
+        '400':
+          description: errore nel form
+  /utente:
+    get:
+      tags:
+        - utente
+      summary: restituisce l'utente corrente
+      description: utente corrente
+      operationId: currentUtente
+      parameters:
+        - name: idUtente
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtenteDTO'
+  /aggiornaPrenotazione:
+    put:
+      tags:
+        - prenotazione
+      summary: Update an existing booking.
+      description: Update an existing booking by Id.
+      operationId: updatePrenotazione
+      requestBody:
+        description: dati da modificare
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrenotazioneRequest'
+        required: true
+      parameters:
+        - name: idPrenotazione
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrenotazioneDTO'
+        '400':
+          description: errore nei dati
+  /aggiornaUtente:
+    put:
+      tags:
+        - utente
+      summary: Update an existing user.
+      description: Update an existing user by Id.
+      operationId: updateUtente
+      requestBody:
+        description: dati da modificare
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UtenteRequest'
+        required: true
+      parameters:
+        - name: idUser
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtenteDTO'
+        '400':
+          description: errore nei dati
+  /delete/{id}:
+    delete:
+      tags:
+        - prenotazione
+      summary: elimina prenotazione
+      description: dato id, elimina prenotazione
+      operationId: deletePrenotazione
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: successful
+  /deleteUtente/{id}:
+    delete:
+      tags:
+        - utente
+      summary: elimina utente
+      description: dato id, elimina utente
+      operationId: deleteUtente
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: successful
+  /:
+    get:
+      tags:
+        - prenotazione
+      summary: restituisce la lista delle prenotazioni utente
+      description: dato id, restituisce le prenotazioni
+      operationId: getDashboard
+      parameters:
+        - name: idUtente
+          in: query
+          description: id utente
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: page
+          in: query
+          description: pagina
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: size
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 5
+      responses:
+        '200':
+          description: succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+                item:
+                  $ref: '#/components/schemas/PrenotazioneDTO'
+  /utenti:
+    get:
+      tags:
+        - utente
+      summary: restituisce la lista degli utenti
+      description: utenti paginati
+      operationId: getUtenti
+      parameters:
+        - name: page
+          in: query
+          description: pagina
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: size
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 5
+      responses:
+        '200':
+          description: succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+                item:
+                  $ref: '#/components/schemas/UtenteDTO'
+
+  /searchPrenotazioniUtente:
+    post:
+      tags:
+        - utente
+      summary: restituisce le prenotazioni dell'utente
+      operationId: searchPrenotazioniUtente
+      parameters:
+        - name: idUser
+          in: query
+          description: id utente
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: page
+          in: query
+          description: pagina
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: size
+          in: query
+          description: size
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      requestBody:
+        description: dati per la ricerca
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrenotazioniFiltro'
+      responses:
+        '200':
+          description: succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+                item:
+                  $ref: '#/components/schemas/UtenteDTO'
+  /searchPrenotazioni:
+    post:
+      tags:
+        - prenotazione
+      operationId: searchPrenotazioni
+      summary: restituisce tutte le prenotazioni
+      parameters:
+        - name: page
+          in: query
+          description: pagina
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 5
+        - name: size
+          in: query
+          description: size
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 5
+      requestBody:
+        description: dati per la ricerca
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrenotazioniFiltro'
+      responses:
+        '200':
+          description: succesful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+                item:
+                  $ref: '#/components/schemas/PrenotazioneDTO'
+  /signup:
+    post:
+      tags:
+        - utente
+      operationId: creaUtente
+      summary: nuovo utente
+      requestBody:
+        description: dati nuovo utente
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UtenteRequest'
+      responses:
+        '200':
+          description: succesful
+        '400':
+          description: errore nell'inserimento
+
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    PrenotazioneDTO:
+      type: object
+      description: "per lista prenotazione"
+      properties:
+        id:
+          type: integer
+          format: int32
+        nomeUtente:
+          type: string
+        cognomeUtente:
+          type: string
+        citta:
+          type: string
+        indirizzo:
+          type: string
+        nStanza:
+          type: string
+        nPostazione:
+          type: integer
+          format: int32
+        dataInizio:
+          type: string
+          format: date-time
+        dataFine:
+          type: string
+          format: date-time
+        stato:
+          type: string
+
+    PrenotazioneRequest:
+      type: object
+      properties:
+        nPostazione:
+          type: integer
+          format: int32
+        dataInizio:
+          type: string
+          format: date-time
+
+    UtenteDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        nome:
+          type: string
+        cognome:
+          type: string
+        email:
+          type: string
+        telefono:
+          type: string
+        tipoUtente:
+          type: string
+        paese:
+          type: string
+        citta:
+          type: string
+        regione:
+          type: string
+        indirizzo:
+          type: string
+
+    UtenteFiltro:
+      type: object
+      properties:
+        email:
+          type: string
+        citta:
+          type: string
+        indirizzo:
+          type: string
+
+    UtenteRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+        cognome:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        telefono:
+          type: string
+        tipoUtente:
+          type: string
+        idSede:
+          type: integer
+          format: int32
+
+    Page:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/PrenotazioneDTO'
+              - $ref: '#/components/schemas/UtenteDTO'
+        pageNumber:
+          type: integer
+          format: int32
+          example: 0
+        pageSize:
+          type: integer
+          format: int32
+          example: 20
+        totalElements:
+          type: integer
+          format: int32
+          example: 100
+        totalPages:
+          type: integer
+          format: int32
+          example: 5
+        last:
+          type: boolean
+          example: false
+
+    PrenotazioniFiltro:
+      type: object
+      properties:
+        dataInizio:
+          type: string
+          format: date-time
+        dataFine:
+          type: string
+          format: date-time
+        email:
+          type: string
+
+
+

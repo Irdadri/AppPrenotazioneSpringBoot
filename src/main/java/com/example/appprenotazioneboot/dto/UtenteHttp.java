@@ -1,3 +1,4 @@
+/*
 package com.example.appprenotazioneboot.dto;
 
 import com.example.appprenotazioneboot.entities.TipoUtenteEnum;
@@ -37,3 +38,5 @@ public class UtenteHttp {
     @Column(name = "tipo_utente")
     private TipoUtenteEnum tipoUtente;
 }
+
+ */
