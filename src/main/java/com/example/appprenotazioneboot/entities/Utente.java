@@ -17,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 
 public class Utente {
+    /*
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -39,6 +40,10 @@ public class Utente {
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_utente")
     private TipoUtenteEnum tipoUtente;
+     */
+
+    @Column(name = "unique")
+    private String unique;
 
     @ManyToOne
     @JoinColumn(name = "id_sede", referencedColumnName = "id")

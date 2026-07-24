@@ -32,8 +32,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/dashboard")
 @CrossOrigin(origins = "http://localhost:4200")
 public class DashboardController implements AggiornaUtenteApi, DefaultApi, DeleteApi,
-        DeleteUtenteApi, PrenotazioneApi, SearchPrenotazioniApi,
-        SearchPrenotazioniUtenteApi, SignupApi, UtenteApi, UtentiApi {
+        PrenotazioneApi, SearchPrenotazioniApi,
+        SearchPrenotazioniUtenteApi {
 
     private final PrenotazioneService prenotazioneService;
     private final UtenteService utenteService;
@@ -55,22 +55,28 @@ public class DashboardController implements AggiornaUtenteApi, DefaultApi, Delet
         return Optional.of(request);
     }
 
+    /*
     @Override
     public ResponseEntity<Void> deleteUtente(Integer id) {
         utenteService.deleteById(id);
         return ResponseEntity.ok().build();
     }
 
+     */
+/*
     @Override
     public ResponseEntity<Page> getUtenti(Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(modelMapper.map((utenteService.getAllUtenti(pageable)), Page.class));
     }
 
+ */
+   /*
     @Override
     public ResponseEntity<UtenteDTO> currentUtente(Integer idUtente) {
         return ResponseEntity.ok(utenteService.getUtente(idUtente));
     }
+
 
     @Override
     public ResponseEntity<Void> creaUtente(@Nullable UtenteRequest utenteRequest) {
@@ -80,10 +86,12 @@ public class DashboardController implements AggiornaUtenteApi, DefaultApi, Delet
     }
 
     @Override
-    public ResponseEntity<Page> searchPrenotazioniUtente(Integer idUser, Integer page, Integer size, @Nullable PrenotazioniFiltro prenotazioniFiltro) {
+    public ResponseEntity<Page> searchPrenotazioniUtente(String unique, Integer page, Integer size, @Nullable PrenotazioniFiltro prenotazioniFiltro) {
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(modelMapper.map((prenotazioneService.getUtentePrenotazioniByFilter(idUser, prenotazioniFiltro, pageable)), Page.class));
+        return ResponseEntity.ok(modelMapper.map((prenotazioneService.getUtentePrenotazioniByFilter(unique, prenotazioniFiltro, pageable)), Page.class));
     }
+
+    */
 
 
 
@@ -95,8 +103,8 @@ public class DashboardController implements AggiornaUtenteApi, DefaultApi, Delet
     }
 
     @Override
-    public ResponseEntity<PrenotazioneDTO> creaPrenotazione(Integer idUser, PrenotazioneRequest prenotazioneRequest) {
-        PrenotazioneDTO prenotazioneDTO = prenotazioneService.insertPrenotazione(prenotazioneRequest, idUser);
+    public ResponseEntity<PrenotazioneDTO> creaPrenotazione(String unique, PrenotazioneRequest prenotazioneRequest) {
+        PrenotazioneDTO prenotazioneDTO = prenotazioneService.insertPrenotazione(prenotazioneRequest, unique);
         if (prenotazioneDTO != null) {
             return ResponseEntity.ok(prenotazioneDTO);
         } else {
@@ -114,13 +122,13 @@ public class DashboardController implements AggiornaUtenteApi, DefaultApi, Delet
         prenotazioneService.deletePrenotazioneById(id);
         return ResponseEntity.ok().build();
     }
-
+/*
     @Override
     public ResponseEntity<Page> getDashboard(Integer idUtente, Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(modelMapper.map((prenotazioneService.getAllPrenotazioniWithPaging(idUtente, pageable)), Page.class));
     }
-
+/*
     @Override
     public ResponseEntity<UtenteDTO> updateUtente(Integer idUser, UtenteRequest utenteRequest) {
         UtenteDTO utenteDTO = utenteService.aggiornaUtente(utenteRequest, idUser);
@@ -130,6 +138,8 @@ public class DashboardController implements AggiornaUtenteApi, DefaultApi, Delet
             return ResponseEntity.badRequest().build();
         }
     }
+
+ */
 
     //dati statici per i form
     @GetMapping("/listaSedi")

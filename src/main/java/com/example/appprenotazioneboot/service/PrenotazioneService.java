@@ -14,22 +14,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 public interface PrenotazioneService {
-    //da rivedere
 
-    List<PrenotazioneDTO> getPrenotazioni(String idUtente);
-
-    List<PrenotazioneDTO> getAllPrenotazioni();
-
-    List<PrenotazioneDTO> getPrenotazioniUtente(Utente utente);
-
-
+    /*
     Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(int idUtente, Pageable pageable);
 
+
+     */
     Page<PrenotazioneDTO> getAllPrenotazioniByFilter(PrenotazioniFiltro prenotazioniFiltro, Pageable pageable);
 
-    Page<PrenotazioneDTO> getUtentePrenotazioniByFilter(int idUser, PrenotazioniFiltro prenotazioniFiltro, Pageable pageable);
 
-    PrenotazioneDTO insertPrenotazione(PrenotazioneRequest request, int idUser);
+    Page<PrenotazioneDTO> getUtentePrenotazioniByFilter(String unique, PrenotazioniFiltro prenotazioniFiltro, Pageable pageable);
+
+    PrenotazioneDTO insertPrenotazione(PrenotazioneRequest request, String unique);
 
     PrenotazioneDTO getPrenotazioneById(int id);
 

@@ -36,25 +36,10 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     private final PrenotazioneRepository repository;
 
 
-    @Override
-    public List<PrenotazioneDTO> getAllPrenotazioni() {
-        List<Prenotazione> listaPrenotazioni = repository.findAll();
-        return listaPrenotazioni.stream()
-                .map(prenotazione -> modelMapper.map(prenotazione, PrenotazioneDTO.class))
-                .collect(Collectors.toList());
-    }
 
     @Override
-    public List<PrenotazioneDTO> getPrenotazioniUtente(Utente utente) {
-        List<Prenotazione> listaPrenotazioni = repository.findPrenotazioneByUtente(utente);
-        return listaPrenotazioni.stream()
-                .map(prenotazione -> modelMapper.map(prenotazione, PrenotazioneDTO.class))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public PrenotazioneDTO insertPrenotazione(PrenotazioneRequest request, int idUser) {
-        Utente utente = utenteRepository.findUtenteById(idUser);
+    public PrenotazioneDTO insertPrenotazione(PrenotazioneRequest request, String unique) {
+        Utente utente = utenteRepository.findUtenteByUnique(unique);
         if (utente != null) {
             Prenotazione prenotazione = modelMapper.map(request, Prenotazione.class);
             prenotazione.setStato("prenotato");
@@ -98,7 +83,7 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
             repository.delete(prenotazione);
         }
     }
-
+/*
     @Override
     public Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(int id, Pageable pageable) {
         Utente utente = utenteRepository.findUtenteById(id);
@@ -113,28 +98,7 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
         return null;
     }
 
-    @Override
-    public List<PrenotazioneDTO> getPrenotazioni(String idUtente) {
-        int id = Integer.parseInt(idUtente);
-        Utente utente = utenteRepository.findUtenteById(id);
-
-        if (utente != null) {
-            if (utente.getTipoUtente().name().equals(TipoUtenteEnum.user.name())) {
-                return repository.findPrenotazioneByUtente(utente).stream()
-                        .map(prenotazione -> modelMapper.map(prenotazione, PrenotazioneDTO.class))
-                        .collect(Collectors.toList());
-            } else if (utente.getTipoUtente().name().equals(TipoUtenteEnum.manager.name())) {
-                return repository.findAll().stream()
-                        .map(prenotazione -> modelMapper.map(prenotazione, PrenotazioneDTO.class))
-                        .collect(Collectors.toList());
-            }
-        } else {
-            return null;
-        }
-
-        return List.of();
-    }
-
+ */
 
     public static Specification<Prenotazione> dateBetween(LocalDateTime dataInizio, LocalDateTime dataFine) {
         return ((root, query, criteriaBuilder) -> {
@@ -150,18 +114,21 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
         });
     }
 
+    /*
     //specification ha il metodo toPredicate(), costruisco il predicato con criteriaBuilder
-    public static Specification<Prenotazione> hasEmail(String email) {
+    public static Specification<Prenotazione> hasEmail(String unique) {
         return ((root, query, criteriaBuilder) -> {
             Join<Prenotazione, Utente> prenotazioneUtenteJoin = root.join("utente");
-            return criteriaBuilder.equal(prenotazioneUtenteJoin.get("email"), email);
+            return criteriaBuilder.equal(prenotazioneUtenteJoin.get("email"), unique);
         });
     }
 
-    public static Specification<Prenotazione> fromUser(int idUser) {
+     */
+
+    public static Specification<Prenotazione> fromUser(String unique) {
         return ((root, query, criteriaBuilder) -> {
             Join<Prenotazione, Utente> prenotazioneUtenteJoin = root.join("utente");
-            return criteriaBuilder.equal(prenotazioneUtenteJoin.get("id"), idUser);
+            return criteriaBuilder.equal(prenotazioneUtenteJoin.get("unique"), unique);
         });
     }
 
@@ -172,29 +139,34 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
         specification = specification.and(dateBetween(prenotazioniFiltro.getDataInizio(), prenotazioniFiltro.getDataFine()));
 
-
+        /*
         if (prenotazioniFiltro.getEmail() != null) {
             specification = specification.and(hasEmail(prenotazioniFiltro.getEmail()));
         }
+
+         */
 
         return repository.findAll(specification, pageable)
                 .map(prenotazione -> modelMapper.map(prenotazione, PrenotazioneDTO.class));
     }
 
     @Override
-    public Page<PrenotazioneDTO> getUtentePrenotazioniByFilter(int idUser, PrenotazioniFiltro prenotazioniFiltro, Pageable pageable) {
+    public Page<PrenotazioneDTO> getUtentePrenotazioniByFilter(String unique, PrenotazioniFiltro prenotazioniFiltro, Pageable pageable) {
         Specification<Prenotazione> specification = Specification.where(null);
 
 
         specification = specification.and(dateBetween(prenotazioniFiltro.getDataInizio(), prenotazioniFiltro.getDataFine()));
 
+        /*
 
         if (prenotazioniFiltro.getEmail() != null) {
             specification = specification.and(hasEmail(prenotazioniFiltro.getEmail()));
         }
 
-        if (idUser != 0) {
-            specification = specification.and(fromUser(idUser));
+         */
+
+        if (unique != null) {
+            specification = specification.and(fromUser(unique));
         }
 
         return repository.findAll(specification, pageable)

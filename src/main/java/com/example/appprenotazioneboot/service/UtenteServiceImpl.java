@@ -27,37 +27,15 @@ import java.util.stream.Collectors;
 
 @Service
 public class UtenteServiceImpl implements  UtenteService{
-    private final ModelMapper modelMapper;
-    private final SedeRepository sedeRepository;
     private UtenteRepository repository;
 
-    public UtenteServiceImpl(UtenteRepository repository, ModelMapper modelMapper, SedeRepository sedeRepository) {
+    public UtenteServiceImpl(UtenteRepository repository) {
         this.repository = repository;
-        this.modelMapper = modelMapper;
-        this.sedeRepository = sedeRepository;
     }
 
 
-    //
-    public Utente loginUtente(String email, String password) {
-        Utente utente = repository.findByEmail(email);
 
-        if (utente != null) {
-            String encryptedPassword = null;
-            try {
-                encryptedPassword = passwordEncrypting(password);
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
-            }
-
-
-            if (encryptedPassword.equals(utente.getPassword())) {
-                return utente;
-            }
-        }
-        return null;
-    }
-//
+/*
     public void inserisciUtente(UtenteRequest utenteRequest) {
         try {
             utenteRequest.setPassword(passwordEncrypting(utenteRequest.getPassword()));
@@ -78,68 +56,22 @@ public class UtenteServiceImpl implements  UtenteService{
         }
         repository.save(utente);
     }
-
-//
-    public String passwordEncrypting(String password) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] encodedhash = digest.digest(
-                password.getBytes(StandardCharsets.UTF_8));
-
-        return HexFormat.of().formatHex(encodedhash);
-    }
+    */
+    /*
 
     public Page<UtenteDTO> getAllUtenti(Pageable pageable){
         Page<Utente> utenti = repository.findAll(pageable);
         return utenti.map(utente -> modelMapper.map(utente, UtenteDTO.class));
     }
-//
-    public static Specification<Utente> hasEmail(String email){
-        return ((root, query, criteriaBuilder) -> {
-            return criteriaBuilder.equal(root.get("email"), email);
-        });
-    }
-//
-    public static Specification<Utente> hasCitta(String citta){
-        return ((root, query, criteriaBuilder) -> {
-            Join<Utente, Sede> utenteSede = root.join("sede");
-            return criteriaBuilder.equal(utenteSede.get("citta"), citta);
-        });
-    }
-//
-    public static Specification<Utente> hasIndirizzo(String indirizzo){
-        return ((root, query, criteriaBuilder) -> {
-            Join<Utente, Sede> utenteSede = root.join("sede");
-            return criteriaBuilder.equal(utenteSede.get("indirizzo"), indirizzo);
-        });
-    }
-//
-    public Page<UtenteDTO> getUtentiByFilter(UtenteFiltro utenteFiltro, Pageable pageable){
 
-        Specification<Utente> specification = Specification.where(null);
+     */
 
-        if(utenteFiltro.getEmail() != null){
-            specification = specification.and(hasEmail(utenteFiltro.getEmail()));
-        }
-
-        if(utenteFiltro.getCitta() != null){
-            specification = specification.and(hasCitta(utenteFiltro.getCitta()));
-        }
-
-        if(utenteFiltro.getIndirizzo() != null){
-            specification = specification.and(hasIndirizzo(utenteFiltro.getIndirizzo()));
-        }
-
-
-        return repository.findAll(specification, pageable)
-                .map(utente -> modelMapper.map(utente, UtenteDTO.class));
-
-    }
 
     @Override
-    public UtenteDTO getUtente(int id) {
-        return modelMapper.map(repository.findUtenteById(id), UtenteDTO.class);
+    public Utente getUtente(String unique) {
+        return repository.findUtenteByUnique(unique);
     }
-
+/*
     @Override
     public UtenteDTO aggiornaUtente(UtenteRequest utenteRequest, int id) {
         Utente utente = repository.findUtenteById(id);
@@ -179,5 +111,7 @@ public class UtenteServiceImpl implements  UtenteService{
             repository.delete(utente);
         }
     }
+
+ */
 
 }
