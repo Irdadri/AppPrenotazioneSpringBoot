@@ -42,8 +42,9 @@ public class Utente {
     private TipoUtenteEnum tipoUtente;
      */
 
-    @Column(name = "unique")
-    private String unique;
+    @Id
+    @Column(name = "user_key")
+    private String userKey;
 
     @ManyToOne
     @JoinColumn(name = "id_sede", referencedColumnName = "id")

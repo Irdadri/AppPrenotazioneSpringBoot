@@ -18,7 +18,7 @@ public class ApiService {
     @Bean
     public UtenteApi utenteApi(){
         ApiClient apiClient = new ApiClient();
-        apiClient.setBasePath("http://localhost:9090/auth/cerca/");
+        apiClient.setBasePath("http://localhost:9090/auth/");
 
         HttpBasicAuth auth =
                 (HttpBasicAuth) apiClient.getAuthentication("basicAuth");

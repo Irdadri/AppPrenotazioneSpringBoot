@@ -17,4 +17,5 @@ public interface PrenotazioneRepository extends JpaRepository<Prenotazione, Inte
 
     Page<Prenotazione> findPrenotazioneByUtente(Utente utente, Pageable pageable);
     Prenotazione findPrenotazioneById(int id);
+
 }

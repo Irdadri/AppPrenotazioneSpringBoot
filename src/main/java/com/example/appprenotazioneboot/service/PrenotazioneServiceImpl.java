@@ -7,6 +7,8 @@ import com.example.appprenotazioneboot.repository.*;
 import jakarta.persistence.criteria.Join;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.openapitools.client.api.UtenteApi;
+import org.openapitools.client.model.UtenteHttp;
 import org.openapitools.model.PrenotazioneDTO;
 import org.openapitools.model.PrenotazioneRequest;
 import org.openapitools.model.PrenotazioniFiltro;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
 
+import java.rmi.NoSuchObjectException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -34,12 +37,12 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     private final UtenteRepository utenteRepository;
     private final ModelMapper modelMapper;
     private final PrenotazioneRepository repository;
-
+    private final UtenteApi utenteApi;
 
 
     @Override
-    public PrenotazioneDTO insertPrenotazione(PrenotazioneRequest request, String unique) {
-        Utente utente = utenteRepository.findUtenteByUnique(unique);
+    public PrenotazioneDTO insertPrenotazione(PrenotazioneRequest request, String userKey) {
+        Utente utente = utenteRepository.findUtenteByUserKey(userKey);
         if (utente != null) {
             Prenotazione prenotazione = modelMapper.map(request, Prenotazione.class);
             prenotazione.setStato("prenotato");
@@ -55,11 +58,16 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
     @Override
     public PrenotazioneDTO getPrenotazioneById(int id) {
-        return modelMapper.map(repository.findPrenotazioneById(id), PrenotazioneDTO.class);
+        Prenotazione prenotazione = repository.findPrenotazioneById(id);
+        UtenteHttp utenteHttp = utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
+        PrenotazioneDTO prenotazioneDTO = modelMapper.map(prenotazione, PrenotazioneDTO.class);
+        prenotazioneDTO.setNomeUtente(utenteHttp.getNome());
+        prenotazioneDTO.setCognomeUtente(utenteHttp.getCognome());
+        return prenotazioneDTO;
     }
 
     @Override
-    public PrenotazioneDTO aggiornaPrenotazione(PrenotazioneRequest prenotazioneRequest, int id) {
+    public PrenotazioneDTO aggiornaPrenotazione(PrenotazioneRequest prenotazioneRequest, int id) throws NoSuchObjectException {
         Prenotazione prenotazione = repository.findPrenotazioneById(id);
         if (prenotazione != null) {
             if (prenotazioneRequest.getNPostazione() != null) {
@@ -71,34 +79,51 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
             repository.save(prenotazione);
             return modelMapper.map(prenotazione, PrenotazioneDTO.class);
+        } else {
+            throw new NoSuchObjectException("prenotazione non trovata");
         }
 
-        return null;
     }
 
     @Override
-    public void deletePrenotazioneById(int id) {
+    public void deletePrenotazioneById(int id) throws Exception {
         Prenotazione prenotazione = repository.findPrenotazioneById(id);
         if (prenotazione != null) {
             repository.delete(prenotazione);
+        } else {
+            throw new Exception("eliminazione non riuscita");
         }
     }
-/*
+
     @Override
-    public Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(int id, Pageable pageable) {
-        Utente utente = utenteRepository.findUtenteById(id);
-        if (utente.getTipoUtente().name().equals(TipoUtenteEnum.user.name())) {
-            Page<Prenotazione> prenotazionePage = repository.findPrenotazioneByUtente(utente, pageable);
-            return prenotazionePage.map(prenotazione -> modelMapper.map(prenotazione, PrenotazioneDTO.class));
-        } else if (utente.getTipoUtente().name().equals(TipoUtenteEnum.manager.name())) {
+    public Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(String userKey, Pageable pageable) {
+        UtenteHttp utente = utenteApi.getCurrentUtente(userKey);
+        Utente _utente = utenteRepository.findUtenteByUserKey(utente.getUserKey());
+        if (utente.getTipoUtente().equals(TipoUtenteEnum.user.name())) {
+            Page<Prenotazione> prenotazionePage = repository.findPrenotazioneByUtente(_utente, pageable);
+            return prenotazionePage.map(prenotazione -> {
+                UtenteHttp temp = utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
+                PrenotazioneDTO prenotazioneDTO = modelMapper.map(prenotazione, PrenotazioneDTO.class);
+                prenotazioneDTO.setNomeUtente(temp.getNome());
+                prenotazioneDTO.setCognomeUtente(temp.getCognome());
+                return prenotazioneDTO;
+            });
+
+        } else if (utente.getTipoUtente().equals(TipoUtenteEnum.manager.name())) {
             Page<Prenotazione> prenotazionePage = repository.findAll(pageable);
-            return prenotazionePage.map(prenotazione -> modelMapper.map(prenotazione, PrenotazioneDTO.class));
+            return prenotazionePage.map(prenotazione -> {
+                UtenteHttp temp = utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
+                PrenotazioneDTO prenotazioneDTO = modelMapper.map(prenotazione, PrenotazioneDTO.class);
+                prenotazioneDTO.setNomeUtente(temp.getNome());
+                prenotazioneDTO.setCognomeUtente(temp.getCognome());
+                return prenotazioneDTO;
+            });
+
         }
 
         return null;
     }
 
- */
 
     public static Specification<Prenotazione> dateBetween(LocalDateTime dataInizio, LocalDateTime dataFine) {
         return ((root, query, criteriaBuilder) -> {
@@ -125,10 +150,10 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
      */
 
-    public static Specification<Prenotazione> fromUser(String unique) {
+    public static Specification<Prenotazione> fromUser(String userKey) {
         return ((root, query, criteriaBuilder) -> {
             Join<Prenotazione, Utente> prenotazioneUtenteJoin = root.join("utente");
-            return criteriaBuilder.equal(prenotazioneUtenteJoin.get("unique"), unique);
+            return criteriaBuilder.equal(prenotazioneUtenteJoin.get("userKey"), userKey);
         });
     }
 
@@ -139,19 +164,29 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
         specification = specification.and(dateBetween(prenotazioniFiltro.getDataInizio(), prenotazioniFiltro.getDataFine()));
 
-        /*
+
+
         if (prenotazioniFiltro.getEmail() != null) {
-            specification = specification.and(hasEmail(prenotazioniFiltro.getEmail()));
+            UtenteHttp utenteHttp = utenteApi.getHttpUser(prenotazioniFiltro.getEmail());
+            specification = specification.and(fromUser(utenteHttp.getUserKey()));
         }
 
-         */
+        Page<PrenotazioneDTO> prenotazioneDTOS = repository.findAll(specification, pageable)
+                .map(prenotazione -> {
+                    UtenteHttp temp = utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
+                    modelMapper.map(prenotazione, PrenotazioneDTO.class);
+                    PrenotazioneDTO prenotazioneDTO = modelMapper.map(prenotazione, PrenotazioneDTO.class);
+                    prenotazioneDTO.setNomeUtente(temp.getNome());
+                    prenotazioneDTO.setCognomeUtente(temp.getCognome());
+                    return prenotazioneDTO;
+                });
 
-        return repository.findAll(specification, pageable)
-                .map(prenotazione -> modelMapper.map(prenotazione, PrenotazioneDTO.class));
+
+        return prenotazioneDTOS;
     }
 
     @Override
-    public Page<PrenotazioneDTO> getUtentePrenotazioniByFilter(String unique, PrenotazioniFiltro prenotazioniFiltro, Pageable pageable) {
+    public Page<PrenotazioneDTO> getUtentePrenotazioniByFilter(String userKey, PrenotazioniFiltro prenotazioniFiltro, Pageable pageable) {
         Specification<Prenotazione> specification = Specification.where(null);
 
 
@@ -165,12 +200,22 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
          */
 
-        if (unique != null) {
-            specification = specification.and(fromUser(unique));
+        if (userKey != null) {
+            specification = specification.and(fromUser(userKey));
         }
 
-        return repository.findAll(specification, pageable)
-                .map(prenotazione -> modelMapper.map(prenotazione, PrenotazioneDTO.class));
+        Page<PrenotazioneDTO> prenotazioneDTOS = repository.findAll(specification, pageable)
+                .map(prenotazione -> {
+                    UtenteHttp temp = utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
+                    modelMapper.map(prenotazione, PrenotazioneDTO.class);
+                    PrenotazioneDTO prenotazioneDTO = modelMapper.map(prenotazione, PrenotazioneDTO.class);
+                    prenotazioneDTO.setNomeUtente(temp.getNome());
+                    prenotazioneDTO.setCognomeUtente(temp.getCognome());
+                    return prenotazioneDTO;
+                });
+
+
+        return prenotazioneDTOS;
 
     }
 

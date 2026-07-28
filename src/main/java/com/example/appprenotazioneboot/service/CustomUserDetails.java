@@ -39,6 +39,7 @@ public class CustomUserDetails implements UserDetailsService {
 
         UtenteHttp utente = utenteApi.getHttpUser(email);
 
+
         if (utente == null) {
 
             log.warning("Utente %s non Trovato!!" + email);

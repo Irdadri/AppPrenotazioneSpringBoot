@@ -62,12 +62,13 @@ public class JWTWebSecurityConfig {
                         .requestMatchers("/auth/welcome", "/auth/generateToken").permitAll()
 
                         // Role-based endpoints
-                        .requestMatchers("/dashboard/deleteUtente/**").hasAuthority("ROLE_manager")
+                        .requestMatchers("/dashboard/deleteUser").hasAuthority("ROLE_manager")
                         .requestMatchers("/dashboard/signup").hasAuthority("ROLE_manager")
                         .requestMatchers("/dashboard/utenti").hasAuthority("ROLE_manager")
                         .requestMatchers("/dashboard/aggiornaUtente").hasAuthority("ROLE_manager")
                         //.requestMatchers("/dashboard/searchPrenotazioniUtente").hasAuthority("ROLE_user")
                         .requestMatchers("/dashboard/searchPrenotazioni").hasAuthority("ROLE_manager")
+                        .requestMatchers("/dashboard/searchPrenotazioniUtente").hasAuthority("ROLE_user")
 
                         // All other endpoints require authentication
                         .anyRequest().authenticated()

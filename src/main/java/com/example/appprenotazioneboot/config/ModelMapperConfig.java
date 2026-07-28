@@ -10,6 +10,7 @@ import org.modelmapper.Converter;
 import org.modelmapper.PropertyMap;
 import org.modelmapper.convention.MatchingStrategies;
 import org.modelmapper.spi.MappingContext;
+import org.openapitools.client.model.UtenteHttp;
 import org.openapitools.model.PrenotazioneDTO;
 import org.openapitools.model.UtenteDTO;
 import org.openapitools.model.UtenteRequest;
@@ -35,7 +36,7 @@ public class ModelMapperConfig {
 
         modelMapper.addMappings(prenotazioneDTOPropertyMap);
         modelMapper.addMappings(utentePropertyMap);
-        modelMapper.addMappings(utenteDTOPropertyMap);
+       // modelMapper.addMappings(utenteDTOPropertyMap);
         modelMapper.addConverter(enumConverter);
 
         return modelMapper;
@@ -44,8 +45,8 @@ public class ModelMapperConfig {
     PropertyMap<Prenotazione, PrenotazioneDTO> prenotazioneDTOPropertyMap = new PropertyMap<Prenotazione, PrenotazioneDTO>() {
         @Override
         protected void configure() {
-            map().setNomeUtente(source.getUtente().getNome());
-            map().setCognomeUtente(source.getUtente().getCognome());
+            //map().setNomeUtente(source.getUtente().getNome());
+            //map().setCognomeUtente(source.getUtente().getCognome());
             map().setCitta(source.getPostazione().getStanza().getSede().getCitta());
             map().setIndirizzo(source.getPostazione().getStanza().getSede().getIndirizzo());
             map().setNStanza(source.getPostazione().getStanza().getNStanza());
@@ -60,6 +61,7 @@ public class ModelMapperConfig {
         }
     };
 
+    /*
     PropertyMap<Utente, UtenteDTO> utenteDTOPropertyMap = new PropertyMap<Utente, UtenteDTO>() {
         @Override
         protected void configure() {
@@ -69,14 +71,8 @@ public class ModelMapperConfig {
             map().setIndirizzo(source.getSede().getIndirizzo());
         }
     };
-    /*
-    PropertyMap<Page, org.openapitools.model.Page> openapiPageMapping = new PropertyMap<Page, org.openapitools.model.Page>() {
-        @Override
-        protected void configure() {
-            map()
-        }
-    }
-    */
+
+     */
 
 
     Converter<String, TipoUtenteEnum> enumConverter = new AbstractConverter<String, TipoUtenteEnum>() {

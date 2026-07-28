@@ -30,9 +30,10 @@ public class Prenotazione {
     @Column(name = "stato")
     private String stato;
 
+
     @JsonBackReference
     @ManyToOne
-    @JoinColumn(name = "id_utente", referencedColumnName = "id")
+    @JoinColumn(name = "id_utente", referencedColumnName = "user_key")
     private Utente utente;
 
     @JsonBackReference
