@@ -29,10 +29,10 @@ public interface PrenotazioneService {
 
     PrenotazioneDTO getPrenotazioneById(int id);
 
-    PrenotazioneDTO aggiornaPrenotazione(PrenotazioneRequest prenotazioneRequest, int id) throws NoSuchObjectException;
+    PrenotazioneDTO aggiornaPrenotazione(PrenotazioneRequest prenotazioneRequest, int id);
 
 
-    void deletePrenotazioneById(int id) throws Exception;
+    void deletePrenotazioneById(int id);
 
 
 }

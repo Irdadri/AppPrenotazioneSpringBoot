@@ -15,8 +15,11 @@ import org.openapitools.model.PrenotazioniFiltro;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 
 import java.rmi.NoSuchObjectException;
@@ -30,8 +33,6 @@ import java.util.stream.Collectors;
 @Service
 public class PrenotazioneServiceImpl implements PrenotazioneService {
 
-    private final SedeRepository sedeRepository;
-    private final StanzaRepository stanzaRepository;
 
     private final PostazioneRepository postazioneRepository;
     private final UtenteRepository utenteRepository;
@@ -49,25 +50,43 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
             prenotazione.setPostazione(postazioneRepository.findPostazioneById(request.getNPostazione()));
             prenotazione.setUtente(utente);
             prenotazione.setDataFine(request.getDataInizio());
-            repository.save(prenotazione);
-            return modelMapper.map(prenotazione, PrenotazioneDTO.class);
+            try {
+                repository.save(prenotazione);
+                return modelMapper.map(prenotazione, PrenotazioneDTO.class);
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         } else {
-            return null;
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
 
     @Override
     public PrenotazioneDTO getPrenotazioneById(int id) {
+
         Prenotazione prenotazione = repository.findPrenotazioneById(id);
-        UtenteHttp utenteHttp = utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
-        PrenotazioneDTO prenotazioneDTO = modelMapper.map(prenotazione, PrenotazioneDTO.class);
-        prenotazioneDTO.setNomeUtente(utenteHttp.getNome());
-        prenotazioneDTO.setCognomeUtente(utenteHttp.getCognome());
-        return prenotazioneDTO;
+
+        if (prenotazione == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Prenotazione non trovata");
+        }
+
+        try {
+            UtenteHttp utenteHttp =
+                    utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
+
+            PrenotazioneDTO dto = modelMapper.map(prenotazione, PrenotazioneDTO.class);
+            dto.setNomeUtente(utenteHttp.getNome());
+            dto.setCognomeUtente(utenteHttp.getCognome());
+
+            return dto;
+
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Utente non trovato");
+        }
     }
 
     @Override
-    public PrenotazioneDTO aggiornaPrenotazione(PrenotazioneRequest prenotazioneRequest, int id) throws NoSuchObjectException {
+    public PrenotazioneDTO aggiornaPrenotazione(PrenotazioneRequest prenotazioneRequest, int id){
         Prenotazione prenotazione = repository.findPrenotazioneById(id);
         if (prenotazione != null) {
             if (prenotazioneRequest.getNPostazione() != null) {
@@ -80,18 +99,18 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
             repository.save(prenotazione);
             return modelMapper.map(prenotazione, PrenotazioneDTO.class);
         } else {
-            throw new NoSuchObjectException("prenotazione non trovata");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Prenotazione non trovata");
         }
 
     }
 
     @Override
-    public void deletePrenotazioneById(int id) throws Exception {
+    public void deletePrenotazioneById(int id){
         Prenotazione prenotazione = repository.findPrenotazioneById(id);
         if (prenotazione != null) {
             repository.delete(prenotazione);
         } else {
-            throw new Exception("eliminazione non riuscita");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Prenotazione non trovata");
         }
     }
 
@@ -99,29 +118,22 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     public Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(String userKey, Pageable pageable) {
         UtenteHttp utente = utenteApi.getCurrentUtente(userKey);
         Utente _utente = utenteRepository.findUtenteByUserKey(utente.getUserKey());
+        Page<Prenotazione> prenotazionePage = null;
         if (utente.getTipoUtente().equals(TipoUtenteEnum.user.name())) {
-            Page<Prenotazione> prenotazionePage = repository.findPrenotazioneByUtente(_utente, pageable);
-            return prenotazionePage.map(prenotazione -> {
-                UtenteHttp temp = utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
-                PrenotazioneDTO prenotazioneDTO = modelMapper.map(prenotazione, PrenotazioneDTO.class);
-                prenotazioneDTO.setNomeUtente(temp.getNome());
-                prenotazioneDTO.setCognomeUtente(temp.getCognome());
-                return prenotazioneDTO;
-            });
+            prenotazionePage = repository.findPrenotazioneByUtente(_utente, pageable);
 
         } else if (utente.getTipoUtente().equals(TipoUtenteEnum.manager.name())) {
-            Page<Prenotazione> prenotazionePage = repository.findAll(pageable);
-            return prenotazionePage.map(prenotazione -> {
-                UtenteHttp temp = utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
-                PrenotazioneDTO prenotazioneDTO = modelMapper.map(prenotazione, PrenotazioneDTO.class);
-                prenotazioneDTO.setNomeUtente(temp.getNome());
-                prenotazioneDTO.setCognomeUtente(temp.getCognome());
-                return prenotazioneDTO;
-            });
-
+            prenotazionePage = repository.findAll(pageable);
         }
 
-        return null;
+        return prenotazionePage.map(prenotazione -> {
+            UtenteHttp temp = utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
+            PrenotazioneDTO prenotazioneDTO = modelMapper.map(prenotazione, PrenotazioneDTO.class);
+            prenotazioneDTO.setNomeUtente(temp.getNome());
+            prenotazioneDTO.setCognomeUtente(temp.getCognome());
+            return prenotazioneDTO;
+        });
+
     }
 
 
@@ -163,7 +175,6 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
         Specification<Prenotazione> specification = Specification.where(null);
 
         specification = specification.and(dateBetween(prenotazioniFiltro.getDataInizio(), prenotazioniFiltro.getDataFine()));
-
 
 
         if (prenotazioniFiltro.getEmail() != null) {

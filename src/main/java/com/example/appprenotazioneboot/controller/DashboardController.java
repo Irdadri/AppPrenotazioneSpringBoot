@@ -20,6 +20,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 
 import java.rmi.NoSuchObjectException;
@@ -122,10 +123,28 @@ public class DashboardController implements AggiornaUtenteApi, AggiornaPrenotazi
         return ResponseEntity.ok(prenotazioni);
     }
 
+    @Override
+    public ResponseEntity<Void> updateUtente(String userKey, UtenteRequest utenteRequest) {
+        if (userKey != null) {
+            org.openapitools.client.model.UtenteRequest request = modelMapper.map(utenteRequest, org.openapitools.client.model.UtenteRequest.class);
+            try {
+                utenteApi.updateUtente(userKey, request);
+                utenteService.updateUtente(userKey, utenteRequest);
+                return ResponseEntity.ok().build();
+            } catch (HttpClientErrorException.NotFound e) {
+                return ResponseEntity.notFound().build();
+            }
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+
+    }
+
 
     @Override
     public ResponseEntity<Page> searchPrenotazioni(Integer page, Integer size, @Nullable PrenotazioniFiltro prenotazioniFiltro) {
         Pageable pageable = PageRequest.of(page, size);
+
         Page prenotazioni = modelMapper.map((prenotazioneService.getAllPrenotazioniByFilter(prenotazioniFiltro, pageable)), Page.class);
         if (prenotazioni == null) {
             return ResponseEntity.notFound().build();
@@ -136,67 +155,39 @@ public class DashboardController implements AggiornaUtenteApi, AggiornaPrenotazi
     @Override
     public ResponseEntity<PrenotazioneDTO> creaPrenotazione(String userKey, PrenotazioneRequest prenotazioneRequest) {
         PrenotazioneDTO prenotazioneDTO = prenotazioneService.insertPrenotazione(prenotazioneRequest, userKey);
-        if (prenotazioneDTO != null) {
-            return ResponseEntity.ok(prenotazioneDTO);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(prenotazioneDTO);
-        }
+        return ResponseEntity.ok(prenotazioneDTO);
     }
 
     @Override
     public ResponseEntity<PrenotazioneDTO> currentPrenotazione(Integer idPrenotazione) {
         PrenotazioneDTO prenotazioneDTO = prenotazioneService.getPrenotazioneById(idPrenotazione);
-        if (prenotazioneDTO == null) {
-            return ResponseEntity.notFound().build();
-        }
         return ResponseEntity.ok(prenotazioneDTO);
     }
 
     @Override
     public ResponseEntity<Void> deletePrenotazione(Integer id) {
-        try {
-            prenotazioneService.deletePrenotazioneById(id);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+
+        prenotazioneService.deletePrenotazioneById(id);
         return ResponseEntity.ok().build();
     }
 
     @Override
     public ResponseEntity<Page> getDashboard(String userKey, Integer page, Integer size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page prenotazioni = modelMapper.map((prenotazioneService.getAllPrenotazioniWithPaging(userKey, pageable)), Page.class);
+        org.springframework.data.domain.Page<PrenotazioneDTO> list = (prenotazioneService.getAllPrenotazioniWithPaging(userKey, pageable));
+        Page prenotazioni = modelMapper.map(list, Page.class);
         if (prenotazioni == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(prenotazioni);
     }
 
-
-    @Override
-    public ResponseEntity<Void> updateUtente(String userKey, UtenteRequest utenteRequest) {
-        if (userKey != null) {
-            org.openapitools.client.model.UtenteRequest request = modelMapper.map(utenteRequest, org.openapitools.client.model.UtenteRequest.class);
-            try{
-                utenteApi.updateUtente(userKey, request);
-                utenteService.updateUtente(userKey, utenteRequest);
-                return ResponseEntity.ok().build();
-            }catch (HttpClientErrorException.NotFound e){
-                return ResponseEntity.notFound().build();
-            }
-        } else {
-            return ResponseEntity.badRequest().build();
-        }
-
-    }
-
     @Override
     public ResponseEntity<Void> updatePrenotazione(Integer idPrenotazione, PrenotazioneRequest prenotazioneRequest) {
-        try {
-            prenotazioneService.aggiornaPrenotazione(prenotazioneRequest, idPrenotazione);
-        } catch (NoSuchObjectException e) {
-            return ResponseEntity.notFound().build();
-        }
+
+        prenotazioneService.aggiornaPrenotazione(prenotazioneRequest, idPrenotazione);
+
+
         return ResponseEntity.ok().build();
     }
 

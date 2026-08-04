@@ -28,7 +28,7 @@ import java.time.ZoneOffset;
 public class ModelMapperConfig {
 
     @Bean
-    ModelMapper modelMapper(){
+    public ModelMapper modelMapper(){
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setSkipNullEnabled(true)
                 .setMatchingStrategy(MatchingStrategies.STRICT);
