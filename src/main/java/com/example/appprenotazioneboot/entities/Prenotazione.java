@@ -30,6 +30,8 @@ public class Prenotazione {
     @Column(name = "stato")
     private String stato;
 
+    @Column(name="data_creazione")
+    private LocalDateTime dataCreazione;
 
     @JsonBackReference
     @ManyToOne

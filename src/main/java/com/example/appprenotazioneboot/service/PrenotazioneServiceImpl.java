@@ -1,11 +1,13 @@
 package com.example.appprenotazioneboot.service;
 
+import com.example.appprenotazioneboot.dto.KafkaMessage;
 import com.example.appprenotazioneboot.entities.Prenotazione;
 import com.example.appprenotazioneboot.entities.TipoUtenteEnum;
 import com.example.appprenotazioneboot.entities.Utente;
 import com.example.appprenotazioneboot.repository.*;
 import jakarta.persistence.criteria.Join;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.java.Log;
 import org.modelmapper.ModelMapper;
 import org.openapitools.client.api.UtenteApi;
 import org.openapitools.client.model.UtenteHttp;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
@@ -27,10 +30,12 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
+@Log
 public class PrenotazioneServiceImpl implements PrenotazioneService {
 
 
@@ -39,8 +44,12 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     private final ModelMapper modelMapper;
     private final PrenotazioneRepository repository;
     private final UtenteApi utenteApi;
+    private final KafkaTemplate<String, KafkaMessage> kafkaTemplate;
 
 
+    /*
+    TODO: il metodo deve mandare un messaggio nel topic Kafka con un riepilogo prenotazione
+     */
     @Override
     public PrenotazioneDTO insertPrenotazione(PrenotazioneRequest request, String userKey) {
         Utente utente = utenteRepository.findUtenteByUserKey(userKey);
@@ -50,9 +59,39 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
             prenotazione.setPostazione(postazioneRepository.findPostazioneById(request.getNPostazione()));
             prenotazione.setUtente(utente);
             prenotazione.setDataFine(request.getDataInizio());
+            prenotazione.setDataCreazione(LocalDateTime.now());
             try {
                 repository.save(prenotazione);
-                return modelMapper.map(prenotazione, PrenotazioneDTO.class);
+                /*
+                kafkaTemplate.send("notification", "prenotazione inserita con id: " + prenotazione.getId());
+
+                kafkaTemplate.send("notification", "1");
+
+                 */
+                KafkaMessage message = new KafkaMessage();
+                PrenotazioneDTO prenotazioneDTO = modelMapper.map(prenotazione, PrenotazioneDTO.class);
+                UtenteHttp utenteHttp = utenteApi.getCurrentUtente(userKey);
+                log.info(utenteHttp.getNome());
+
+                /*
+                message.setPrenotazioneDTO(modelMapper.map(prenotazione, PrenotazioneDTO.class));
+
+                 */
+                message.setTipoNotifica("EMAIL");
+                Map<String, String> temp = message.getProperties();
+                temp.put("citta", prenotazioneDTO.getCitta());
+                temp.put("indirizzo", prenotazioneDTO.getIndirizzo());
+                temp.put("nStanza", prenotazioneDTO.getNStanza());
+                temp.put("nPostazione", String.valueOf(prenotazioneDTO.getNPostazione()));
+                temp.put("dataInizio", String.valueOf(prenotazioneDTO.getDataInizio()));
+                temp.put("dataFine", String.valueOf(prenotazioneDTO.getDataFine()));
+                temp.put("nome utente", utenteHttp.getNome());
+                temp.put("email", utenteHttp.getEmail());
+
+
+                kafkaTemplate.send("notification", message);
+
+                return prenotazioneDTO;
             } catch (Exception e) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
             }

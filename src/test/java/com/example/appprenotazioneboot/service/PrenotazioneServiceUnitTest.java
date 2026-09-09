@@ -32,6 +32,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -53,6 +54,9 @@ public class PrenotazioneServiceUnitTest {
     UtenteRepository utenteRepository;
     @Mock
     PostazioneRepository postazioneRepository;
+    @Mock
+    KafkaTemplate kafkaTemplate;
+
 
     private ModelMapper modelMapper;
 
@@ -89,7 +93,8 @@ public class PrenotazioneServiceUnitTest {
                 utenteRepository,
                 modelMapper,
                 repository,
-                utenteApi
+                utenteApi,
+                kafkaTemplate
         );
 
 
