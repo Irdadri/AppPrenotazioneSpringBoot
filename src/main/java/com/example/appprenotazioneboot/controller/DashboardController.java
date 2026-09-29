@@ -88,9 +88,9 @@ public class DashboardController implements AggiornaUtenteApi, AggiornaPrenotazi
 
 
     @Override
-    public ResponseEntity<UtenteDTO> currentUtente(String unique) {
+    public ResponseEntity<UtenteDTO> currentUtente(String userKey) {
         try {
-            UtenteHttp utenteHttp = utenteApi.getCurrentUtente(unique);
+            UtenteHttp utenteHttp = utenteApi.getCurrentUtente(userKey);
             log.info(utenteHttp.toString());
             UtenteDTO utenteDTO = utenteService.currentUtente(utenteHttp);
             return ResponseEntity.ok(utenteDTO);
