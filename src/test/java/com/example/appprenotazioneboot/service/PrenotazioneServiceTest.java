@@ -56,6 +56,8 @@ public class PrenotazioneServiceTest {
 
     @MockBean
     UtenteApi utenteApi;
+    @MockBean
+    UtenteCacheService utenteCacheService;
 
     UtenteHttp utenteManager;
     UtenteHttp utenteUser;
@@ -66,7 +68,6 @@ public class PrenotazioneServiceTest {
     private UtenteRepository utenteRepository;
     @Autowired
     private PrenotazioneRepository prenotazioneRepository;
-
     @Spy
     private ModelMapper modelMapper;
     @Autowired

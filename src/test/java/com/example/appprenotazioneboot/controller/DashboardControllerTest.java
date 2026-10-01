@@ -7,6 +7,7 @@ import com.example.appprenotazioneboot.repository.PostazioneRepository;
 import com.example.appprenotazioneboot.repository.PrenotazioneRepository;
 import com.example.appprenotazioneboot.repository.UtenteRepository;
 import com.example.appprenotazioneboot.service.PrenotazioneService;
+import com.example.appprenotazioneboot.service.UtenteCacheService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -66,6 +67,8 @@ public class DashboardControllerTest {
 
     @MockBean
     UtenteApi utenteApi;
+    @MockBean
+    UtenteCacheService utenteCacheService;
     UtenteHttp utenteManager;
     UtenteHttp utenteUser;
 
