@@ -1,3 +1,4 @@
+/*
 package com.example.appprenotazioneboot.service;
 
 
@@ -16,7 +17,14 @@ public class UtenteCacheService {
     }
 
     @Cacheable(value = "utenti", key = "#userKey")
-    public UtenteHttp getUtenteHttp(String userKey) {
+    public UtenteHttp getCurrentUtente(String userKey) {
         return utenteApi.getCurrentUtente(userKey);
     }
+
+    @Cacheable(value="utenti", key = "#email")
+    public UtenteHttp getHttpUser(String email){
+        return utenteApi.getHttpUser(email);
+    }
 }
+
+*/

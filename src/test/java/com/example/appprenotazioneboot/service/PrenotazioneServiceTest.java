@@ -56,8 +56,8 @@ public class PrenotazioneServiceTest {
 
     @MockBean
     UtenteApi utenteApi;
-    @MockBean
-    UtenteCacheService utenteCacheService;
+//    @MockBean
+//    UtenteCacheService utenteCacheService;
 
     UtenteHttp utenteManager;
     UtenteHttp utenteUser;

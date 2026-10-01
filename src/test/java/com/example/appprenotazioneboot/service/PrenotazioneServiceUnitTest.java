@@ -64,8 +64,8 @@ public class PrenotazioneServiceUnitTest {
 
     @Mock
     UtenteApi utenteApi;
-    @Mock
-    UtenteCacheService utenteCacheService;
+//    @Mock
+//    UtenteCacheService utenteCacheService;
 
 
 
@@ -96,9 +96,9 @@ public class PrenotazioneServiceUnitTest {
                 modelMapper,
                 repository,
                 utenteApi,
-                kafkaTemplate,
-                utenteCacheService
-
+                kafkaTemplate
+//                ,
+//                utenteCacheServices
         );
 
 

@@ -16,7 +16,9 @@ import org.openapitools.model.UtenteDTO;
 import org.openapitools.model.UtenteFiltro;
 import org.openapitools.model.UtenteRequest;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -32,18 +34,21 @@ public class UtenteServiceImpl implements UtenteService{
     private UtenteRepository repository;
     private final UtenteApi utenteApi;
 
-    private final UtenteCacheService utenteCacheService;
+    //private final UtenteCacheService utenteCacheService;
 
-    public UtenteServiceImpl(UtenteRepository repository, ModelMapper modelMapper, SedeRepository sedeRepository, UtenteApi utenteApi, UtenteCacheService utenteCacheService) {
+    public UtenteServiceImpl(UtenteRepository repository, ModelMapper modelMapper, SedeRepository sedeRepository, UtenteApi utenteApi) {
         this.repository = repository;
         this.modelMapper = modelMapper;
         this.sedeRepository = sedeRepository;
         this.utenteApi = utenteApi;
-        this.utenteCacheService = utenteCacheService;
     }
 
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "allUser", allEntries = true),
+            @CacheEvict(value = "utente", key = "#userKey")
+    })
     public void creaUtente(String userKey, int idSede) {
         Utente utente = new Utente();
         utente.setUserKey(userKey);
@@ -52,6 +57,7 @@ public class UtenteServiceImpl implements UtenteService{
     }
 
     @Override
+    @Cacheable(value="utente", key = "#userKey")
     public Utente getUtente(String userKey) {
         return repository.findUtenteByUserKey(userKey);
     }
@@ -66,7 +72,7 @@ public class UtenteServiceImpl implements UtenteService{
     public org.openapitools.model.Page getAllUtenti(Pageable pageable) throws NoSuchObjectException {
         Page<UtenteDTO> utenteDTOPage = repository.findAll(pageable)
                 .map(utente -> {
-                    UtenteHttp utenteHttp = utenteCacheService.getUtenteHttp(utente.getUserKey());
+                    UtenteHttp utenteHttp = utenteApi.getCurrentUtente(utente.getUserKey());
                     UtenteDTO temp = modelMapper.map(utenteHttp, UtenteDTO.class);
                     Sede sede = sedeRepository.findSedeById(utente.getSede().getId());
                     temp.setCitta(sede.getCitta());
@@ -84,8 +90,12 @@ public class UtenteServiceImpl implements UtenteService{
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "allUser", allEntries = true),
+            @CacheEvict(value = "utente", key = "#userKey")
+    })
     public void updateUtente(String userKey, UtenteRequest utenteRequest) {
-        Utente utente = getUtente(userKey);
+        Utente utente = repository.findUtenteByUserKey(userKey);
         if(utente != null) {
             if (utenteRequest.getIdSede() != null) {
                 utente.setSede(sedeRepository.findSedeById(utenteRequest.getIdSede()));
@@ -96,6 +106,7 @@ public class UtenteServiceImpl implements UtenteService{
     }
 
     @Override
+    @Cacheable(value = "currentUtente", key = "#utenteHttp.email()")
     public UtenteDTO currentUtente(UtenteHttp utenteHttp) {
         Utente utente = getUtente(utenteHttp.getUserKey());
         UtenteDTO utenteDTO = modelMapper.map(utenteHttp, UtenteDTO.class);
@@ -106,10 +117,13 @@ public class UtenteServiceImpl implements UtenteService{
         return utenteDTO;
     }
 
-
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "allUser", allEntries = true),
+            @CacheEvict(value = "utente", key = "#userKey")
+    })
     public void deleteUtente(String userKey) {
-        Utente utente = getUtente(userKey);
+        Utente utente = repository.findUtenteByUserKey(userKey);
         if(utente != null){
             repository.delete(utente);
         }
