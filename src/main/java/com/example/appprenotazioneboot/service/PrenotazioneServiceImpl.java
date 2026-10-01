@@ -154,10 +154,6 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     }
 
 
-    @Cacheable(
-            value = "prenotazione",
-            key = "#userKey"
-    )
     @Override
     public Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(String userKey, Pageable pageable) {
         UtenteHttp utente = utenteApi.getCurrentUtente(userKey);
