@@ -14,6 +14,7 @@ import org.openapitools.client.model.UtenteHttp;
 import org.openapitools.model.PrenotazioneDTO;
 import org.openapitools.model.PrenotazioneRequest;
 import org.openapitools.model.PrenotazioniFiltro;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -45,7 +46,6 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     private final PrenotazioneRepository repository;
     private final UtenteApi utenteApi;
     private final KafkaTemplate<String, KafkaMessage> kafkaTemplate;
-
 
     /*
     TODO: il metodo deve mandare un messaggio nel topic Kafka con un riepilogo prenotazione
@@ -153,6 +153,11 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
         }
     }
 
+
+    @Cacheable(
+            value = "prenotazione",
+            key = "#userKey"
+    )
     @Override
     public Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(String userKey, Pageable pageable) {
         UtenteHttp utente = utenteApi.getCurrentUtente(userKey);

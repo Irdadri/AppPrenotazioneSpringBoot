@@ -7,6 +7,7 @@ import com.example.appprenotazioneboot.entities.TipoUtenteEnum;
 import com.example.appprenotazioneboot.entities.Utente;
 import com.example.appprenotazioneboot.repository.SedeRepository;
 import com.example.appprenotazioneboot.repository.UtenteRepository;
+
 import jakarta.persistence.criteria.Join;
 import org.modelmapper.ModelMapper;
 import org.openapitools.client.api.UtenteApi;
@@ -15,6 +16,7 @@ import org.openapitools.model.UtenteDTO;
 import org.openapitools.model.UtenteFiltro;
 import org.openapitools.model.UtenteRequest;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -52,6 +54,7 @@ public class UtenteServiceImpl implements UtenteService{
         return repository.findUtenteByUserKey(userKey);
     }
 
+    @Cacheable(value = "utentehttp", key = "#userKey")
     @Override
     public UtenteHttp getUtenteHttp(String userKey){
        return utenteApi.getCurrentUtente(userKey);
@@ -61,7 +64,7 @@ public class UtenteServiceImpl implements UtenteService{
     public org.openapitools.model.Page getAllUtenti(Pageable pageable) throws NoSuchObjectException {
         Page<UtenteDTO> utenteDTOPage = repository.findAll(pageable)
                 .map(utente -> {
-                    UtenteHttp utenteHttp = utenteApi.getCurrentUtente(utente.getUserKey());
+                    UtenteHttp utenteHttp = getUtenteHttp(utente.getUserKey());
                     UtenteDTO temp = modelMapper.map(utenteHttp, UtenteDTO.class);
                     Sede sede = sedeRepository.findSedeById(utente.getSede().getId());
                     temp.setCitta(sede.getCitta());
@@ -80,7 +83,7 @@ public class UtenteServiceImpl implements UtenteService{
 
     @Override
     public void updateUtente(String userKey, UtenteRequest utenteRequest) {
-        Utente utente = repository.findUtenteByUserKey(userKey);
+        Utente utente = getUtente(userKey);
         if(utente != null) {
             if (utenteRequest.getIdSede() != null) {
                 utente.setSede(sedeRepository.findSedeById(utenteRequest.getIdSede()));
@@ -92,7 +95,7 @@ public class UtenteServiceImpl implements UtenteService{
 
     @Override
     public UtenteDTO currentUtente(UtenteHttp utenteHttp) {
-        Utente utente = repository.findUtenteByUserKey(utenteHttp.getUserKey());
+        Utente utente = getUtente(utenteHttp.getUserKey());
         UtenteDTO utenteDTO = modelMapper.map(utenteHttp, UtenteDTO.class);
         utenteDTO.setRegione(utente.getSede().getRegione());
         utenteDTO.setPaese(utente.getSede().getPaese());
@@ -104,7 +107,7 @@ public class UtenteServiceImpl implements UtenteService{
 
     @Override
     public void deleteUtente(String userKey) {
-        Utente utente = repository.findUtenteByUserKey(userKey);
+        Utente utente = getUtente(userKey);
         if(utente != null){
             repository.delete(utente);
         }
