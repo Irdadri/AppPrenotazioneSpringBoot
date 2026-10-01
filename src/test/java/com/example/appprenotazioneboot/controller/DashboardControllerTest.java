@@ -67,8 +67,6 @@ public class DashboardControllerTest {
 
     @MockBean
     UtenteApi utenteApi;
-    @MockBean
-    UtenteCacheService utenteCacheService;
     UtenteHttp utenteManager;
     UtenteHttp utenteUser;
 
