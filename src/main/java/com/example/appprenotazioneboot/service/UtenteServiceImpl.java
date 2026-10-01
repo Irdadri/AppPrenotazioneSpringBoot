@@ -62,6 +62,7 @@ public class UtenteServiceImpl implements UtenteService{
     }
 
     @Override
+    @Cacheable(value = "allBookings", key = "'allPrenotazioni'")
     public org.openapitools.model.Page getAllUtenti(Pageable pageable) throws NoSuchObjectException {
         Page<UtenteDTO> utenteDTOPage = repository.findAll(pageable)
                 .map(utente -> {

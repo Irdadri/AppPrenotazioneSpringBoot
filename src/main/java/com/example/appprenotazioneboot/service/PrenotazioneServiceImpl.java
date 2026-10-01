@@ -156,6 +156,7 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
 
     @Override
+    @Cacheable(value = "allBookings", key = "'allPrenotazioni'")
     public Page<PrenotazioneDTO> getAllPrenotazioniWithPaging(String userKey, Pageable pageable) {
         UtenteHttp utente = utenteApi.getCurrentUtente(userKey);
         Utente _utente = utenteRepository.findUtenteByUserKey(utente.getUserKey());
