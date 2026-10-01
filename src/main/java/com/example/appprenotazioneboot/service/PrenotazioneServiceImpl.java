@@ -46,6 +46,7 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
     private final PrenotazioneRepository repository;
     private final UtenteApi utenteApi;
     private final KafkaTemplate<String, KafkaMessage> kafkaTemplate;
+    private final UtenteCacheService utenteCacheService;
 
     /*
     TODO: il metodo deve mandare un messaggio nel topic Kafka con un riepilogo prenotazione
@@ -111,7 +112,7 @@ public class PrenotazioneServiceImpl implements PrenotazioneService {
 
         try {
             UtenteHttp utenteHttp =
-                    utenteApi.getCurrentUtente(prenotazione.getUtente().getUserKey());
+             utenteCacheService.getUtenteHttp(prenotazione.getUtente().getUserKey());
 
             PrenotazioneDTO dto = modelMapper.map(prenotazione, PrenotazioneDTO.class);
             dto.setNomeUtente(utenteHttp.getNome());

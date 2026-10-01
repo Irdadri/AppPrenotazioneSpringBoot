@@ -32,11 +32,14 @@ public class UtenteServiceImpl implements UtenteService{
     private UtenteRepository repository;
     private final UtenteApi utenteApi;
 
-    public UtenteServiceImpl(UtenteRepository repository, ModelMapper modelMapper, SedeRepository sedeRepository, UtenteApi utenteApi) {
+    private final UtenteCacheService utenteCacheService;
+
+    public UtenteServiceImpl(UtenteRepository repository, ModelMapper modelMapper, SedeRepository sedeRepository, UtenteApi utenteApi, UtenteCacheService utenteCacheService) {
         this.repository = repository;
         this.modelMapper = modelMapper;
         this.sedeRepository = sedeRepository;
         this.utenteApi = utenteApi;
+        this.utenteCacheService = utenteCacheService;
     }
 
 
@@ -48,13 +51,11 @@ public class UtenteServiceImpl implements UtenteService{
         repository.save(utente);
     }
 
-
     @Override
     public Utente getUtente(String userKey) {
         return repository.findUtenteByUserKey(userKey);
     }
 
-    @Cacheable(value = "utentehttp", key = "#userKey")
     @Override
     public UtenteHttp getUtenteHttp(String userKey){
        return utenteApi.getCurrentUtente(userKey);
@@ -64,7 +65,7 @@ public class UtenteServiceImpl implements UtenteService{
     public org.openapitools.model.Page getAllUtenti(Pageable pageable) throws NoSuchObjectException {
         Page<UtenteDTO> utenteDTOPage = repository.findAll(pageable)
                 .map(utente -> {
-                    UtenteHttp utenteHttp = getUtenteHttp(utente.getUserKey());
+                    UtenteHttp utenteHttp = utenteCacheService.getUtenteHttp(utente.getUserKey());
                     UtenteDTO temp = modelMapper.map(utenteHttp, UtenteDTO.class);
                     Sede sede = sedeRepository.findSedeById(utente.getSede().getId());
                     temp.setCitta(sede.getCitta());
