@@ -134,7 +134,7 @@ public class UtenteServiceImpl implements UtenteService{
     }
 
     @Override
-    @Cacheable(value = "currentUtente", key = "#utenteHttp.JSON_PROPERTY_EMAIL")
+    @Cacheable(value = "currentUtente", key = "#utenteHttp.email")
     public UtenteDTO currentUtente(UtenteHttp utenteHttp) {
         Utente utente = getUtente(utenteHttp.getUserKey());
         UtenteDTO utenteDTO = modelMapper.map(utenteHttp, UtenteDTO.class);
