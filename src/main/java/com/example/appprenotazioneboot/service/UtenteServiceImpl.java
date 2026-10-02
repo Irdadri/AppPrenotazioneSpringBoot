@@ -73,6 +73,9 @@ public class UtenteServiceImpl implements UtenteService{
         Page<UtenteDTO> utenteDTOPage = repository.findAll(pageable)
                 .map(utente -> {
                     UtenteHttp utenteHttp = utenteApi.getCurrentUtente(utente.getUserKey());
+                    if (utenteHttp == null) {
+                        return null;
+                    }
                     UtenteDTO temp = modelMapper.map(utenteHttp, UtenteDTO.class);
                     Sede sede = sedeRepository.findSedeById(utente.getSede().getId());
                     temp.setCitta(sede.getCitta());
