@@ -47,7 +47,6 @@ public class UtenteServiceImpl implements UtenteService{
     @Override
     @Caching(evict = {
             @CacheEvict(value = "allUser", allEntries = true),
-            @CacheEvict(value = "utente", allEntries = true),
             @CacheEvict(value = "utente_sede", allEntries = true)
     })
     public void creaUtente(String userKey, int idSede) {
@@ -93,7 +92,6 @@ public class UtenteServiceImpl implements UtenteService{
     @Override
     @Caching(evict = {
             @CacheEvict(value = "allUser", allEntries = true),
-            @CacheEvict(value = "utente", allEntries = true),
             @CacheEvict(value = "utente_sede", allEntries = true)
     })
     public void updateUtente(String userKey, UtenteRequest utenteRequest) {
@@ -122,7 +120,6 @@ public class UtenteServiceImpl implements UtenteService{
     @Override
     @Caching(evict = {
             @CacheEvict(value = "allUser", allEntries = true),
-            @CacheEvict(value = "utente", allEntries = true),
             @CacheEvict(value = "utente_sede", allEntries = true)
     })
     public void deleteUtente(String userKey) {
