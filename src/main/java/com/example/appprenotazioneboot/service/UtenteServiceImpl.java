@@ -20,6 +20,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import org.springframework.web.client.HttpClientErrorException;
 
 import java.rmi.NoSuchObjectException;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class UtenteServiceImpl implements UtenteService{
@@ -71,18 +73,23 @@ public class UtenteServiceImpl implements UtenteService{
     @Override
     @Cacheable(value = "allUser", key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     public org.openapitools.model.Page getAllUtenti(Pageable pageable) throws NoSuchObjectException {
-        Page<UtenteDTO> utenteDTOPage = repository.findAll(pageable)
+        Page<Utente> utentiPage = repository.findAll(pageable);
+        List<UtenteDTO> utenti = utentiPage.getContent()
+                .stream()
                 .map(utente -> {
                     try {
-                        UtenteHttp utenteHttp = utenteApi.getCurrentUtente(utente.getUserKey());
+                        UtenteHttp utenteHttp =
+                                utenteApi.getCurrentUtente(utente.getUserKey());
 
                         if (utenteHttp == null) {
                             return null;
                         }
 
-                        UtenteDTO temp = modelMapper.map(utenteHttp, UtenteDTO.class);
+                        UtenteDTO temp =
+                                modelMapper.map(utenteHttp, UtenteDTO.class);
 
-                        Sede sede = sedeRepository.findSedeById(utente.getSede().getId());
+                        Sede sede =
+                                sedeRepository.findSedeById(utente.getSede().getId());
 
                         temp.setCitta(sede.getCitta());
                         temp.setIndirizzo(sede.getIndirizzo());
@@ -93,14 +100,21 @@ public class UtenteServiceImpl implements UtenteService{
                     } catch (HttpClientErrorException.NotFound e) {
                         return null;
                     }
-                });
+                })
+                .filter(Objects::nonNull)
+                .toList();
 
-        if(utenteDTOPage != null){
-            return modelMapper.map(utenteDTOPage, org.openapitools.model.Page.class);
-        } else {
-            throw new NoSuchObjectException("utenti non trovati");
-        }
+        Page<UtenteDTO> utenteDTOPage =
+                new PageImpl<>(
+                        utenti,
+                        pageable,
+                        utentiPage.getTotalElements()
+                );
 
+        return modelMapper.map(
+                utenteDTOPage,
+                org.openapitools.model.Page.class
+        );
     }
 
     @Override
