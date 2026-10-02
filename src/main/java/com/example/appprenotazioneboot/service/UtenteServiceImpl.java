@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.rmi.NoSuchObjectException;
 import java.util.List;
@@ -72,16 +73,26 @@ public class UtenteServiceImpl implements UtenteService{
     public org.openapitools.model.Page getAllUtenti(Pageable pageable) throws NoSuchObjectException {
         Page<UtenteDTO> utenteDTOPage = repository.findAll(pageable)
                 .map(utente -> {
-                    UtenteHttp utenteHttp = utenteApi.getCurrentUtente(utente.getUserKey());
-                    if (utenteHttp == null) {
+                    try {
+                        UtenteHttp utenteHttp = utenteApi.getCurrentUtente(utente.getUserKey());
+
+                        if (utenteHttp == null) {
+                            return null;
+                        }
+
+                        UtenteDTO temp = modelMapper.map(utenteHttp, UtenteDTO.class);
+
+                        Sede sede = sedeRepository.findSedeById(utente.getSede().getId());
+
+                        temp.setCitta(sede.getCitta());
+                        temp.setIndirizzo(sede.getIndirizzo());
+                        temp.setRegione(sede.getRegione());
+
+                        return temp;
+
+                    } catch (HttpClientErrorException.NotFound e) {
                         return null;
                     }
-                    UtenteDTO temp = modelMapper.map(utenteHttp, UtenteDTO.class);
-                    Sede sede = sedeRepository.findSedeById(utente.getSede().getId());
-                    temp.setCitta(sede.getCitta());
-                    temp.setIndirizzo(sede.getIndirizzo());
-                    temp.setRegione(sede.getRegione());
-                    return temp;
                 });
 
         if(utenteDTOPage != null){
