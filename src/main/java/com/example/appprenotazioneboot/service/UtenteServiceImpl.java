@@ -48,7 +48,7 @@ public class UtenteServiceImpl implements UtenteService{
     @Caching(evict = {
             @CacheEvict(value = "allUser", allEntries = true),
             @CacheEvict(value = "utente", allEntries = true),
-            @CacheEvict(value = "utente", allEntries = true)
+            @CacheEvict(value = "utente_sede", allEntries = true)
     })
     public void creaUtente(String userKey, int idSede) {
         Utente utente = new Utente();
